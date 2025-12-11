@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作业数据实时监控大屏</title>   
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* =======================================================================
+           MONITOR STYLES (Soft UI + Left Badge Layout)
+           ======================================================================= */
+        
+        :root {
+            --primary-color: #2c5282; 
+            --bg-color: #f0f2f5; 
+            --panel-bg: #ffffff;
+            --font-color: #495057;
+            --hover-row-bg: #e7f1ff; 
+            
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 15px 35px rgba(0,0,0,0.12);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--font-color);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* === 顶部 Header === */
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: 60px;
+            background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+            color: #f8f9fa;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .header-title-group { display: flex; align-items: center; gap: 0.75rem; }
+        .header-title-group i { font-size: 1.4rem; opacity: 0.9; color: #90cdf4; }
+        .header-title-wrapper h1 { font-size: 1.2rem; font-weight: 600; margin: 0; letter-spacing: 0.5px; }
+        .current-user-text { font-size: 0.75rem; opacity: 0.7; margin-top: 2px; }
+        #datetime-display { font-size: 0.95rem; font-weight: 500; opacity: 0.9; margin-left: 2rem; color: #e2e8f0; font-variant-numeric: tabular-nums;}
+
+        .nav-icon {
+            background: rgba(255,255,255,0.08); border: none; color: #e2e8f0; cursor: pointer;
+            width: 32px; height: 32px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .nav-icon:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        /* === 主容器 === */
+        .page-container {
+            flex-grow: 1;
+            padding: 1.2rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* === 进度表视图样式 === */
+        .progress-container {
+            background: var(--panel-bg);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e9ecef;
+        }
+        .progress-toolbar {
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+        }
+        .table-wrapper {
+            flex-grow: 1;
+            overflow: auto;
+            background-color: #fff;
+        }
+        .monitor-table {
+            border-collapse: separate; 
+            border-spacing: 0;
+            width: 100%;
+        }
+        .monitor-table th {
+            background-color: #f8f9fa;
+            color: #59626a;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 10px 8px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #dde2e6;
+        }
+        .monitor-table td {
+            vertical-align: middle;
+            font-size: 0.9rem;
+            padding: 8px;
+            border-bottom: 1px solid #f1f3f5;
+            color: #495057;
+            transition: background-color 0.15s ease;
+        }
+        
+        /* 整行悬停高亮 */
+        .monitor-table tbody tr:hover td {
+            background-color: var(--hover-row-bg);
+            color: #1a202c;
+        }
+
+        /* 可点击单元格高亮 */
+        .clickable-cell { cursor: pointer; }
+        .clickable-cell:hover { 
+            background-color: #dbeafe !important;
+            position: relative; 
+        }
+
+        .clickable-name {
+            cursor: pointer;
+            color: #3182ce;
+            font-weight: 600;
+            position: relative;
+            display: inline-block;
+        }
+        .clickable-name:hover { text-decoration: underline; color: #2b6cb0; }
+        
+        /* 表格内小标签 */
+        .status-dot-wrapper { display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        .status-tag {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            min-width: 50px;
+        }
+        .tag-completed { background: #def7ec; color: #03543f; }
+        .tag-partial { background: #fef3c7; color: #92400e; }
+        .tag-uncompleted { background: #fee2e2; color: #9b1c1c; }
+        .tag-none { background: #f3f4f6; color: #9ca3af; }
+
+        /* === [弹窗样式] === */
+        .task-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(33, 37, 41, 0.4);
+            backdrop-filter: blur(3px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .task-modal-overlay.active { opacity: 1; }
+
+        .task-modal {
+            background: #ffffff;
+            width: 520px;
+            max-width: 90%;
+            max-height: 80vh;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.96);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .task-modal-overlay.active .task-modal { transform: scale(1); }
+        
+        .task-modal-header {
+            padding: 1rem 1.5rem;
+            background: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .task-modal-title { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: #2d3748; 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .task-modal-title i { color: var(--primary-color); }
+        
+        .task-modal-close { 
+            cursor: pointer; color: #a0aec0; font-size: 1.2rem; transition: color 0.2s;
+        }
+        .task-modal-close:hover { color: #4a5568; }
+
+        .task-modal-body {
+            padding: 0;
+            overflow-y: auto;
+            background-color: #ffffff;
+        }
+
+        /* === 分组样式 === */
+        .task-group { margin-bottom: 0; }
+        
+        .task-group-header {
+            padding: 0.75rem 1.5rem;
+            background: #edf2f7;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #4a5568;
+            display: flex; align-items: center;
+            border-left: 4px solid var(--primary-color);
+            border-bottom: 1px solid #e2e8f0;
+            border-top: 1px solid #e2e8f0;
+        }
+        .task-group:first-child .task-group-header { border-top: none; }
+        
+        /* === [布局修改核心] 任务条目：左标签，右任务 === */
+        .task-item {
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; /* 从左开始排列 */
+            gap: 1.2rem; /* 标签和文字之间的间距 */
+            background-color: #fff; 
+            border-bottom: 1px solid #f7fafc;
+            transition: background 0.15s;
+        }
+        .task-item:hover { background-color: #f8faff; }
+
+        .task-info { 
+            flex-grow: 1; /* 占据剩余空间 */
+        }
+        
+        .task-name { 
+            font-size: 0.95rem; 
+            color: #2d3748; 
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* 模态框内的标签：固定宽度 */
+        .modern-status-badge {
+            flex-shrink: 0; /* 防止被挤压 */
+            width: 95px;          
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;        
+            align-items: center;
+            gap: 8px;             
+            justify-content: flex-start; 
+            border: 1px solid transparent;
+        }
+        
+        .status-done { background-color: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+        .status-part { background-color: #fffbeb; color: #b45309; border-color: #fde68a; }
+        .status-todo { background-color: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+        /* === 登录遮罩 === */
+        #loginOverlay { background-color: #f0f2f5 !important; }
+        #loginBox {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            width: 400px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none; padding: 10px;
+        }
+        .btn-primary:hover { background-color: #2b6cb0; }
+        .form-control { background-color: #f7fafc; border: 1px solid #e2e8f0; }
+        .form-control:focus { background-color: #fff; border-color: #63b3ed; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15); }
+    </style>
+</head>
+<body>
+
+    <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div id="loginBox">
+            <div style="width: 60px; height: 60px; background: #ebf8ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                <i class="fas fa-shield-alt" style="font-size: 1.6rem; color: var(--primary-color);"></i>
+            </div>
+            <h4 style="margin-bottom: 0.5rem; color: #2d3748; font-weight: 700;">作业数据监控</h4>
+            <p class="text-muted small mb-4">Monitor System Access</p>
+            
+            <form id="loginForm">
+                <input type="email" id="loginEmail" class="form-control mb-3" placeholder="账号邮箱" required>
+                <input type="password" id="loginPassword" class="form-control mb-3" placeholder="访问密码" required>
+                <button type="submit" id="loginBtn" class="btn btn-primary w-100 rounded-2">登录系统</button>
+            </form>
+            <p id="loginError" class="text-danger small mt-3 d-none"><i class="fas fa-exclamation-circle me-1"></i> 验证失败</p>
+        </div>
+    </div>
+
+    <header class="platform-header" id="appHeader" style="visibility: hidden;">
+        <div class="header-title-group">
+            <i class="fas fa-chart-bar"></i> 
+            <div class="header-title-wrapper">
+                <h1>实时监控中心</h1>
+                <div class="current-user-text" id="headerSubText">Connecting...</div>
+            </div>
+        </div>
+        
+        <div id="datetime-display"></div>
+
+        <div class="d-flex align-items-center gap-2">
+            <button class="nav-icon" id="fullscreenBtn" title="全屏显示">
+                <i class="fas fa-expand"></i>
+            </button>
+            <button class="nav-icon" id="logoutBtn" title="安全退出">
+                <i class="fas fa-power-off"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="page-container" id="appContainer" style="visibility: hidden;">
+        <div class="progress-container">
+            <div class="progress-toolbar">
+                <div class="fw-bold text-secondary" style="font-size: 0.95rem;"><i class="fas fa-layer-group text-primary me-2"></i>年级视图</div>
+                <div id="progressGradeFilter" class="d-flex gap-2"></div>
+            </div>
+            <div class="table-wrapper">
+                <table class="table monitor-table mb-0 text-center">
+                    <thead id="progressTableHead"></thead>
+                    <tbody id="progressTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="task-modal-overlay" id="taskModalOverlay">
+        <div class="task-modal" id="taskModalContent">
+            <div class="task-modal-header">
+                <div class="task-modal-title" id="taskModalTitle">
+                    <i class="fas fa-list-ul"></i>
+                    <span>任务清单</span>
+                </div>
+                <div class="task-modal-close" id="taskModalCloseBtn">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="task-modal-body" id="taskListContainer">
+                </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+// =================================================================================
+// HOMEWORK MONITOR SYSTEM
+// =================================================================================
+
+const SUPABASE_URL = 'https://hxcnuktwwmoilzsdlzdh.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Vm9roWkthCCrTFmSvfDjGg_Z-Z0UWGO'; 
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// =================================================================================
+// UTILS
+// =================================================================================
+function padZero(num) { return num < 10 ? '0' + num : String(num); }
+
+function toBeijingDate(dateObj) {
+    const d = dateObj instanceof Date ? dateObj : new Date();
+    const utcTime = d.getTime() + (d.getTimezoneOffset() * 60000);
+    return new Date(utcTime + 8 * 3600 * 1000);
+}
+
+function getBeijingDateString() {
+    const bj = toBeijingDate(new Date());
+    return `${bj.getFullYear()}-${padZero(bj.getMonth() + 1)}-${padZero(bj.getDate())}`;
+}
+
+// =================================================================================
+// CORE STATE
+// =================================================================================
+const App = {
+    state: { students: [], subjects: [], homeworks: [] },
+    grades: ['一年级','二年级','三年级','四年级','五年级','六年级','七年级','八年级','九年级'],
+    
+    get today() { return getBeijingDateString(); },
+
+    async init() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) { UI.showLogin(); return; }
+
+        UI.showApp(session.user.email);
+        await DataService.fetchAll();
+        DataService.subscribeRealtime();
+        ProgressModule.init();
+        TaskModalModule.init(); 
+        this.renderAll();
+        
+        setInterval(UI.updateClock, 1000);
+        UI.updateClock();
+    },
+
+    renderAll() {
+        ProgressModule.render();
+        const now = new Date();
+        const timeStr = `${padZero(now.getHours())}:${padZero(now.getMinutes())}`;
+        document.getElementById('headerSubText').textContent = `数据已同步 (${timeStr})`;
+    }
+};
+
+// =================================================================================
+// DATA SERVICE
+// =================================================================================
+const DataService = {
+    isFetching: false,
+    debounceTimer: null,
+    realtimeChannel: null,
+
+    async fetchAll() {
+        if (this.isFetching) return;
+        this.isFetching = true;
+
+        try {
+            const today = App.today;
+            const [stuRes, subRes, hwRes] = await Promise.all([
+                supabaseClient.from('students').select('*').eq('is_deleted', false),
+                supabaseClient.from('subjects').select('*').eq('is_deleted', false),
+                supabaseClient.from('homeworks').select('*').eq('is_deleted', false).eq('date', today) 
+            ]);
+
+            if (stuRes.error) throw stuRes.error;
+            if (subRes.error) throw subRes.error;
+            if (hwRes.error) throw hwRes.error;
+
+            App.state.students = stuRes.data || [];
+            App.state.subjects = subRes.data || [];
+            App.state.homeworks = hwRes.data || [];
+
+            console.log(`[DataService] 同步完成 (作业数: ${App.state.homeworks.length})`);
+            App.renderAll();
+
+        } catch (err) {
+            console.error('[DataService] 失败:', err.message);
+        } finally {
+            this.isFetching = false;
+        }
+    },
+
+    subscribeRealtime() {
+        if (this.realtimeChannel) return;
+        const today = App.today;
+
+        this.realtimeChannel = supabaseClient.channel('monitor_lite')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => this.handleUpdate('students'))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'homeworks', filter: `date=eq.${today}` }, () => this.handleUpdate('homeworks'))
+            .subscribe((status) => {
+                if (['CHANNEL_ERROR', 'TIMED_OUT', 'CLOSED'].includes(status)) {
+                    this.realtimeChannel = null;
+                    setTimeout(() => this.subscribeRealtime(), 5000);
+                }
+            });
+    },
+
+    handleUpdate(source) {
+        if (this.debounceTimer) clearTimeout(this.debounceTimer);
+        this.debounceTimer = setTimeout(() => {
+            console.log(`[Realtime] 触发更新 (${source})`);
+            this.fetchAll();
+        }, 5000);
+    }
+};
+
+// =================================================================================
+// UI MANAGER
+// =================================================================================
+const UI = {
+    loginOverlay: document.getElementById('loginOverlay'),
+    appHeader: document.getElementById('appHeader'),
+    appContainer: document.getElementById('appContainer'),
+    
+    init() {
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('loginError');
+
+            btn.disabled = true;
+            btn.textContent = '验证中...';
+            err.classList.add('d-none');
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                err.classList.remove('d-none');
+                btn.disabled = false;
+                btn.textContent = '登录系统';
+            } else {
+                window.location.reload();
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.reload();
+        });
+
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(e => {});
+            } else {
+                document.exitFullscreen().catch(e => {});
+            }
+        });
+    },
+
+    showLogin() {
+        this.loginOverlay.style.display = 'flex';
+        this.appHeader.style.visibility = 'hidden';
+        this.appContainer.style.visibility = 'hidden';
+    },
+    showApp() {
+        this.loginOverlay.style.display = 'none';
+        this.appHeader.style.visibility = 'visible';
+        this.appContainer.style.visibility = 'visible';
+    },
+    updateClock() {
+        const now = new Date();
+        const week = ['周日','周一','周二','周三','周四','周五','周六'];
+        const dateStr = `${now.getFullYear()}/${padZero(now.getMonth()+1)}/${padZero(now.getDate())}`;
+        const timeStr = `${padZero(now.getHours())}:${padZero(now.getMinutes())}:${padZero(now.getSeconds())}`;
+        document.getElementById('datetime-display').innerHTML = `<span style="opacity:0.7; font-size:0.9em; margin-right:8px;">${dateStr} ${week[now.getDay()]}</span> ${timeStr}`;
+    }
+};
+
+// =================================================================================
+// PROGRESS MODULE (Table)
+// =================================================================================
+const ProgressModule = {
+    head: document.getElementById('progressTableHead'),
+    body: document.getElementById('progressTableBody'),
+    filterContainer: document.getElementById('progressGradeFilter'),
+    validGrades: ['三年级','四年级','五年级','六年级','七年级','八年级','九年级'],
+
+    init() {
+        this.filterContainer.innerHTML = this.validGrades.map(g => `
+            <div class="form-check form-check-inline" style="user-select:none;">
+                <input class="form-check-input" type="checkbox" id="pg-${g}" value="${g}" checked>
+                <label class="form-check-label small" for="pg-${g}" style="color:#555;">${g}</label>
+            </div>
+        `).join('');
+        this.filterContainer.addEventListener('change', () => this.render());
+        
+        // 委托点击事件
+        this.body.addEventListener('click', (e) => {
+            const target = e.target;
+            
+            if (target.classList.contains('clickable-name')) {
+                const sid = target.dataset.sid;
+                const sName = target.innerText;
+                TaskModalModule.showByStudent(sid, sName);
+            }
+
+            const cell = target.closest('.clickable-cell');
+            if (cell) {
+                const { sid, subid, sname, subname } = cell.dataset;
+                TaskModalModule.showBySubject(sid, subid, sname, subname);
+            }
+        });
+    },
+
+    render() {
+        const allSubjects = App.state.subjects.filter(s => !s.is_deleted);
+        const SUBJECT_ORDER = ['语文','数学','英语','物理','化学','道法','历史','生物','地理','科学','其他'];
+        allSubjects.sort((a, b) => {
+            const idxA = SUBJECT_ORDER.indexOf(a.name);
+            const idxB = SUBJECT_ORDER.indexOf(b.name);
+            return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+        });
+
+        this.head.innerHTML = `<tr><th style="width:50px;">#</th><th style="width:100px;">姓名</th><th style="width:80px;">年级</th>${allSubjects.map(s => `<th>${s.name}</th>`).join('')}</tr>`;
+
+        const selectedGrades = Array.from(this.filterContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+        const activeStudentIds = new Set(App.state.homeworks.map(h => h.studentId)); 
+
+        const homeworkMap = new Map();
+        App.state.homeworks.forEach(h => {
+            const key = `${h.studentId}-${h.subjectId}`;
+            if (!homeworkMap.has(key)) homeworkMap.set(key, []);
+            homeworkMap.get(key).push(h);
+        });
+
+        const studentsToDisplay = App.state.students
+            .filter(s => !s.is_deleted && selectedGrades.includes(s.grade) && activeStudentIds.has(s.id))
+            .sort((a, b) => {
+                const gradeDiff = App.grades.indexOf(a.grade) - App.grades.indexOf(b.grade);
+                if (gradeDiff !== 0) return gradeDiff;
+                return a.name.localeCompare(b.name, 'zh-Hans-CN');
+            });
+
+        if (studentsToDisplay.length === 0) {
+            this.body.innerHTML = `<tr><td colspan="${3 + allSubjects.length}" class="text-center py-5 text-muted">今日暂无数据</td></tr>`;
+            return;
+        }
+
+        this.body.innerHTML = studentsToDisplay.map((student, index) => {
+            let rowHTML = `<tr>
+                <td class="text-muted small">${index + 1}</td>
+                <td><span class="clickable-name" data-sid="${student.id}">${student.name}</span></td>
+                <td><span class="badge bg-light text-secondary border">${student.grade}</span></td>`;
+            
+            allSubjects.forEach(subject => {
+                const key = `${student.id}-${subject.id}`;
+                const hws = homeworkMap.get(key) || [];
+                let tagClass = "tag-none", text = "无作业";
+                
+                if (hws.length > 0) {
+                    const completed = hws.filter(h => h.status === '已完成').length;
+                    const partial = hws.filter(h => h.status === '部分完成').length;
+                    if (completed === hws.length) { text = "已完成"; tagClass = "tag-completed"; }
+                    else if (completed > 0 || partial > 0) { text = "进行中"; tagClass = "tag-partial"; }
+                    else { text = "未完成"; tagClass = "tag-uncompleted"; }
+                }
+                
+                rowHTML += `<td class="clickable-cell" 
+                                data-sid="${student.id}" 
+                                data-sname="${student.name}"
+                                data-subid="${subject.id}"
+                                data-subname="${subject.name}">
+                                <div class="status-dot-wrapper"><span class="status-tag ${tagClass}">${text}</span></div>
+                            </td>`;
+            });
+            return rowHTML + '</tr>';
+        }).join('');
+    }
+};
+
+// =================================================================================
+// TASK MODAL MODULE
+// =================================================================================
+const TaskModalModule = {
+    overlay: document.getElementById('taskModalOverlay'),
+    container: document.getElementById('taskListContainer'),
+    title: document.querySelector('#taskModalTitle span'),
+    closeBtn: document.getElementById('taskModalCloseBtn'),
+
+    init() {
+        this.closeBtn.addEventListener('click', () => this.hide());
+        this.overlay.addEventListener('click', (e) => {
+            if (e.target === this.overlay) this.hide();
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') this.hide();
+        });
+    },
+
+    showByStudent(studentId, studentName) {
+        const tasks = App.state.homeworks.filter(h => h.studentId == studentId);
+        this.renderGroupedList(tasks, `${studentName} 的任务清单`);
+        this.show();
+    },
+
+    showBySubject(studentId, subjectId, studentName, subjectName) {
+        const tasks = App.state.homeworks.filter(h => h.studentId == studentId && h.subjectId == subjectId);
+        this.renderGroupedList(tasks, `${studentName} - ${subjectName}`);
+        this.show();
+    },
+
+    renderGroupedList(tasks, titleText) {
+        this.title.textContent = titleText;
+        this.container.innerHTML = '';
+
+        if (tasks.length === 0) {
+            this.container.innerHTML = '<div class="text-center text-muted py-5"><i class="far fa-folder-open mb-2 d-block h4"></i>无相关作业记录</div>';
+            return;
+        }
+
+        const subMap = new Map(App.state.subjects.map(s => [s.id, s.name]));
+        const SUBJECT_ORDER = ['语文','数学','英语','物理','化学','道法','历史','生物','地理','科学','其他'];
+
+        const groups = {};
+        tasks.forEach(task => {
+            const sName = subMap.get(task.subjectId) || '其他';
+            if (!groups[sName]) groups[sName] = [];
+            groups[sName].push(task);
+        });
+
+        const sortedKeys = Object.keys(groups).sort((a, b) => {
+            const idxA = SUBJECT_ORDER.indexOf(a);
+            const idxB = SUBJECT_ORDER.indexOf(b);
+            return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+        });
+
+        sortedKeys.forEach(sName => {
+            const header = document.createElement('div');
+            header.className = 'task-group-header';
+            header.innerHTML = `<span>${sName}</span>`;
+            this.container.appendChild(header);
+
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'task-group';
+
+            const groupTasks = groups[sName].sort((a, b) => (a.task_order || 0) - (b.task_order || 0));
+
+            groupTasks.forEach(task => {
+                const item = document.createElement('div');
+                item.className = 'task-item';
+
+                let badgeClass = 'status-todo';
+                let icon = '<i class="far fa-circle"></i>';
+                let text = '未完成';
+
+                if (task.status === '已完成') {
+                    badgeClass = 'status-done';
+                    icon = '<i class="fas fa-check"></i>';
+                    text = '已完成';
+                } else if (task.status === '部分完成') {
+                    badgeClass = 'status-part';
+                    icon = '<i class="fas fa-adjust"></i>';
+                    text = '部分完成';
+                }
+
+                item.innerHTML = `
+                    <div class="modern-status-badge ${badgeClass}">
+                        ${icon} <span>${text}</span>
+                    </div>
+
+                    <div class="task-info">
+                        <div class="task-name">${task.task}</div>
+                    </div>
+                `;
+                groupDiv.appendChild(item);
+            });
+            this.container.appendChild(groupDiv);
+        });
+    },
+
+    show() {
+        this.overlay.style.display = 'flex';
+        setTimeout(() => this.overlay.classList.add('active'), 10);
+    },
+
+    hide() {
+        this.overlay.classList.remove('active');
+        setTimeout(() => {
+            if(!this.overlay.classList.contains('active')) {
+                this.overlay.style.display = 'none';
+            }
+        }, 200);
+    }
+};
+
+// =================================================================================
+// STARTUP
+// =================================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    UI.init();
+    App.init();
+});
+    </script>
+</body>
+</html>

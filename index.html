@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>培优托管中心作业查询</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+:root {
+    /* 沿用管理系统的品牌色 */
+    --primary-color: #0067c6;
+    --primary-color-hover: #005da6;
+    --bg-color: #f2f2f2;
+    --panel-bg-color: #ffffff;
+    --font-color: #333;
+    --border-color: #e0e0e0;
+    --shadow-md: 0 5px 12px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    --card-header-bg: rgba(0, 103, 198, 0.1);
+    
+    /* 沿用管理系统的状态色 (用于图标和文字) */
+    --status-green: #107c10;
+    --status-yellow: #ffb900;
+    --status-red: #d83b01;
+    --status-gray: #6c757d;
+}
+
+/* 页面布局 (来自原文件) */
+body {
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--font-color);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+header {
+    background: linear-gradient(90deg, var(--primary-color) 0%, #0078d4 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+header h1 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* 查询面板 (来自原文件) */
+.query-container {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 2rem 1rem;
+}
+.query-card {
+    background-color: var(--panel-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    width: 100%;
+    max-width: 600px;
+}
+.query-card h2 {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+}
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.btn-primary:hover {
+    background-color: var(--primary-color-hover);
+    border-color: var(--primary-color-hover);
+}
+
+/* 查询结果展示区 */
+#resultContainer {
+    margin-top: 2rem;
+}
+
+/* *************************************************
+  * (新) 作业卡片重新设计
+  *************************************************
+*/
+
+/* 1. 结果卡片主容器 */
+.homework-result-card {
+    background: var(--panel-bg-color);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-md);
+    overflow: hidden; /* 确保子元素圆角正确 */
+}
+
+/* 2. 结果卡片头部 */
+.homework-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.25rem;
+    background: var(--card-header-bg); /* 沿用管理员侧卡片头背景色 */
+    border-bottom: 1px solid var(--border-color);
+}
+.homework-result-header-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+.homework-result-header-date {
+    font-size: 0.9rem;
+    color: var(--font-color);
+    font-weight: 500;
+}
+
+/* 3. 卡片内容主体 */
+.homework-result-body {
+    padding: 1rem 1.25rem;
+}
+
+/* 4. 每个科目的分组 */
+.subject-section {
+    margin-bottom: 1.5rem;
+}
+.subject-section:last-child {
+    margin-bottom: 0;
+}
+
+/* 5. 科目名称标题 */
+.subject-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--font-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+.subject-title .fas { /* 科目前的小图标 */
+    font-size: 1rem;
+    margin-right: 0.5rem;
+    color: var(--primary-color);
+}
+
+/* 6. 作业项列表 */
+.homework-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 0.75rem;
+}
+.homework-item {
+    display: flex;
+    align-items: flex-start; /* 顶部对齐，防止多行文本时图标居中 */
+    padding: 0.75rem 0.25rem;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 0.75rem;
+}
+.homework-item:last-child {
+    border-bottom: none;
+}
+
+/* 7. (核心) 状态图标 */
+.item-status-icon {
+    flex-shrink: 0;
+    font-size: 1.2rem; /* 图标大小 */
+    padding-top: 0.15rem; /* 微调垂直对齐 */
+    width: 20px; /* 固定宽度 */
+    text-align: center;
+}
+
+/* 8. (核心) 作业内容和状态文本 */
+.item-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+.item-task-text {
+    font-size: 0.95rem; /* 任务文本 */
+    font-weight: 500;
+    color: var(--font-color);
+    line-height: 1.5;
+    white-space: pre-wrap; /* 保留换行 */
+}
+.item-status-text {
+    font-size: 0.8rem; /* 状态文本 */
+    font-weight: 600;
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+}
+
+/* 9. (核心) 状态颜色应用 */
+.homework-item.status-completed {
+    color: var(--status-green);
+}
+.homework-item.status-partial {
+    color: var(--status-yellow);
+}
+.homework-item.status-incomplete {
+    color: var(--status-red);
+}
+.homework-item.status-unknown {
+    color: var(--status-gray);
+}
+
+</style>
+</head>
+
+<body>
+<header>
+  <h1>培优托管中心</h1>
+</header>
+
+<main class="query-container">
+  <div class="query-card">
+    <h2>家庭作业进度查询</h2>
+    <div class="mb-3">
+      <label for="studentName" class="form-label fw-bold">学生姓名</label>
+      <input type="text" id="studentName" class="form-control" placeholder="请输入学生姓名">
+    </div>
+    <div class="mb-3">
+      <label for="studentGrade" class="form-label fw-bold">年级</label>
+      <select id="studentGrade" class="form-select">
+        <option value="">请选择年级</option>
+        <option>幼儿园</option>
+        <option>一年级</option><option>二年级</option><option>三年级</option>
+        <option>四年级</option><option>五年级</option><option>六年级</option>
+        <option>七年级</option><option>八年级</option><option>九年级</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <label for="queryDate" class="form-label fw-bold">日期</label>
+      <input type="date" id="queryDate" class="form-control">
+    </div>
+    <button id="queryBtn" class="btn btn-primary w-100 mb-3 fw-bold">查询</button>
+    <div id="resultContainer"></div>
+  </div>
+</main>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const dateInput = document.getElementById('queryDate');
+  const now = new Date();
+  // 沿用北京时间逻辑
+  const formatter = new Intl.DateTimeFormat('fr-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  });
+  dateInput.value = formatter.format(now);
+
+  // 沿用 Supabase 客户端初始化
+  const supabase = window.supabase.createClient(
+    'https://hxcnuktwwmoilzsdlzdh.supabase.co',
+    'sb_publishable_Vm9roWkthCCrTFmSvfDjGg_Z-Z0UWGO'
+  );
+
+  const resultContainer = document.getElementById('resultContainer');
+  const queryBtn = document.getElementById('queryBtn');
+
+  // 沿用查询逻辑
+  queryBtn.addEventListener('click', async () => {
+    const name = document.getElementById('studentName').value.trim();
+    const grade = document.getElementById('studentGrade').value.trim();
+    const date = document.getElementById('queryDate').value;
+
+    if (!name || !grade || !date) {
+      resultContainer.innerHTML = '<div class="alert alert-danger text-center fw-bold">请填写完整查询条件</div>';
+      return;
+    }
+
+    resultContainer.innerHTML = '<div class="text-center text-muted p-3"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>查询中，请稍候...</div>';
+    queryBtn.disabled = true;
+
+    try {
+      // --- 进阶方案：调用数据库函数 (RPC) ---
+      
+      // 我们不再分别查询 students -> homeworks -> subjects
+      // 而是直接调用 search_student_homework 函数
+      // 参数名必须与 SQL 函数定义的参数名完全一致 (p_student_name, p_grade, p_date)
+      
+      const { data: flatHomeworks, error } = await supabase.rpc('search_student_homework', {
+        p_student_name: name,
+        p_grade: grade,
+        p_date: date
+      });
+
+      if (error) {
+        throw error; // 抛出错误由 catch 捕获
+      }
+
+      // 如果返回空数组，说明：
+      // 1. 学生不存在 或
+      // 2. 学生存在但没作业
+      // 为了安全（防止枚举学生），我们统一提示未找到记录
+      if (!flatHomeworks || flatHomeworks.length === 0) {
+        resultContainer.innerHTML = '<div class="alert alert-info text-center">未找到相关记录（请确认信息是否正确，或当日暂未登记作业）</div>';
+        return;
+      }
+
+      // --- 数据处理：将扁平数组转换为分组结构 (Grouped) ---
+      // 数据库返回的是: [{subject_name: '语文', task: '...', ...}, ...]
+      // 我们需要转为: {'语文': [hw1, hw2], '数学': [hw3]}
+      
+      const grouped = {};
+      
+      flatHomeworks.forEach(h => {
+        const subjectName = h.subject_name || '未知科目';
+        if (!grouped[subjectName]) grouped[subjectName] = [];
+        // 为了复用渲染逻辑，我们构造一个符合旧结构的对象
+        grouped[subjectName].push({
+            task: h.task,
+            status: h.status
+        });
+      });
+
+      // 沿用科目排序逻辑
+      const SUBJECT_ORDER = [
+        '语文','数学','英语','物理','化学',
+        '道法','历史','生物','地理','科学','其他'
+      ];
+      
+      const orderedSubjects = Object.keys(grouped).sort((a, b) => {
+        const idxA = SUBJECT_ORDER.indexOf(a);
+        const idxB = SUBJECT_ORDER.indexOf(b);
+        return (idxA === -1 ? SUBJECT_ORDER.length : idxA) -
+               (idxB === -1 ? SUBJECT_ORDER.length : idxB);
+      });
+
+      // --- 渲染逻辑 (与之前基本一致，只需微调变量引用) ---
+      let html = `
+        <div class="homework-result-card">
+          <div class="homework-result-header">
+            <span class="homework-result-header-name">${name}（${grade}）</span>
+            <span class="homework-result-header-date">${date}</span>
+          </div>
+          <div class="homework-result-body">
+      `;
+
+      for (const subject of orderedSubjects) {
+        html += `
+          <div class="subject-section">
+            <h4 class="subject-title"><i class="fas fa-book-open"></i>${subject}</h4>
+            <ul class="homework-list">
+        `;
+
+        grouped[subject].forEach(h => {
+          let statusClass = 'status-unknown';
+          let statusIcon = 'fa-regular fa-circle-question';
+          let statusText = h.status || '未登记';
+
+          if (h.status === '已完成') {
+            statusClass = 'status-completed';
+            statusIcon = 'fa-solid fa-check-circle';
+            statusText = '已完成';
+          } else if (h.status === '部分完成') {
+            statusClass = 'status-partial';
+            statusIcon = 'fa-solid fa-adjust';
+            statusText = '部分完成';
+          } else if (h.status === '未完成') {
+            statusClass = 'status-incomplete';
+            statusIcon = 'fa-regular fa-circle';
+            statusText = '未完成';
+          }
+          
+          html += `
+            <li class="homework-item ${statusClass}">
+              <div class="item-status-icon">
+                <i class="${statusIcon}"></i>
+              </div>
+              <div class="item-content">
+                <span class="item-task-text">${h.task}</span>
+                <span class="item-status-text">${statusText}</span>
+              </div>
+            </li>
+          `;
+        });
+
+        html += `</ul></div>`;
+      }
+
+      html += `</div></div>`;
+      resultContainer.innerHTML = html;
+
+    } catch (err) {
+      console.error("RPC Error:", err);
+      resultContainer.innerHTML = '<div class="alert alert-danger text-center">查询服务暂时不可用，请联系培优托管中心获取帮助。</div>';
+    } finally {
+        queryBtn.disabled = false;
+    }
+  });
+});
+</script>
+
+</body>
+</html>
