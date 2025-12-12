@@ -1,0 +1,1789 @@
+/* === Microsoft Fluent Design Inspired Palette & Styles === */
+        :root {
+            /* Primary & Accents */
+            --primary-color: #0067c6;       /* Microsoft Blue */
+            --primary-color-hover: #005da6; /* Darker Blue */
+            --secondary-color: #6c757d;   
+            
+            /* Backgrounds */
+            --bg-color: #f2f2f2;        /* Light Gray Background */
+            --panel-bg-color: #ffffff;
+            --header-bg-color: #ffffff;
+            --title-highlight-bg: rgba(0, 103, 198, 0.07);
+            --card-header-bg: rgba(0, 103, 198, 0.1);
+
+            /* Typography */
+            --font-color: #333333;        /* Dark Gray for Text */
+            --font-color-light: #555555;
+
+            /* Borders & Shadows (Fluent UI Style - Enhanced) */
+            --border-color: #e0e0e0;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
+            --shadow-md: 0 5px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+
+            /* Status Colors */
+            --status-red: #d83b01;
+            --status-yellow: #ffb900;
+            --status-green: #107c10;
+            --status-red-bg: #fde7e9;
+            --status-yellow-bg: #fff4ce;
+            --status-green-bg: #dff6dd;
+            --status-gray-bg: #f5f5f5;
+             --status-blue-bg: #e3f2fd;       /* 淡蓝色背景 */
+            --status-light-red-bg: #ffebee;  /* 淡红色背景 */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background-color: var(--bg-color);
+            color: var(--font-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* REQ 5: Header Background & Style */
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary-color) 0%, #0078d4 100%);
+            color: white;
+            box-shadow: var(--shadow-md);
+            flex-shrink: 0;
+        }
+        .header-main-content { display: flex; align-items: center; gap: 1.5rem; }
+        .header-title-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 0.75rem;
+        }
+        .header-title-group .fas {
+            font-size: 2rem;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .platform-header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        #datetime-display {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+
+        .nav-icons { display: flex; gap: 0.35rem; }
+
+        .nav-icon {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; 
+            color: white;
+            transition: all 0.2s ease-in-out;
+            border: none; background: none; padding: 0.2rem; border-radius: 6px; width: 65px;
+        }
+        .nav-icon:hover { 
+            background-color: rgba(255,255,255,0.15); 
+            transform: translateY(-2px);
+        }
+        .nav-icon i { font-size: 1.35rem; opacity: 0.9; }
+        .nav-icon span { font-size: 0.7rem; margin-top: 0.2rem; opacity: 0.9; }
+        
+        .nav-icon[data-bs-target="#studentManagementModal"] i,
+        .nav-icon[data-bs-target="#subjectManagementModal"] i,
+        .nav-icon[data-bs-target="#progressModal"] i,
+        .nav-icon[data-bs-target="#largeScreenModal"] i,
+        .nav-icon[data-bs-target="#resetSystemModal"] i { color: white; }
+        
+        .page-container {
+             padding: 0 1.5rem 1.5rem 1.5rem;
+             display: flex;
+             flex-grow: 1;
+             min-height: 0;
+        }
+        .main-container { display: flex; flex-grow: 1; gap: 1.5rem; min-height: 0; }
+        
+        /* REQ 3: Enhanced Panel Shadows & Hover */
+        .content-panel {
+            background-color: var(--panel-bg-color); border-radius: 8px; border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm); padding: 1.5rem; display: flex; flex-direction: column;
+            overflow: hidden; transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .content-panel:focus-within, .content-panel:hover { 
+            box-shadow: var(--shadow-lg); 
+            transform: translateY(-4px);
+        }
+        .content-panel-left { width: calc(33.333% - 0.75rem); }
+        .content-panel-right { width: calc(66.667% - 0.75rem); }
+
+        .content-panel-left .panel-header {
+            font-size: 1.25rem; font-weight: 600; margin: -1.5rem -1.5rem 1.5rem -1.5rem; padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color); color: var(--primary-color);
+            background-color: var(--title-highlight-bg);
+            border-top-left-radius: 8px; border-top-right-radius: 8px;
+        }
+        .right-panel-header {
+            margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--title-highlight-bg);
+            border-bottom: 1px solid var(--border-color);
+            border-top-left-radius: 8px; border-top-right-radius: 8px;
+        }
+        .right-panel-header h2 {
+            font-size: 1.25rem; font-weight: 600; color: var(--primary-color);
+            margin: 0;
+        }
+        
+        .panel-body { flex-grow: 1; overflow-y: auto; padding-right: 10px; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #0067c6; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffb900; }
+        
+        .main-modal .modal-dialog {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  min-height: 100vh;
+  width: calc(100vw - 40px);
+  max-width: calc(100vw - 40px);
+  height: calc(100vh - 40px);
+  max-height: calc(100vh - 40px);
+}
+
+        .main-modal .modal-content { height: 100%; display: flex; flex-direction: column; border-radius: 8px; border: none; box-shadow: var(--shadow-lg); }
+        .main-modal .modal-body { overflow-y: auto; flex-grow: 1; }
+        .modal.fade .modal-dialog { transition: transform .3s ease-out, opacity .3s ease-out; transform: translateY(-20px); opacity: 0; }
+        .modal.show .modal-dialog { transform: translateY(0); opacity: 1; }
+        .modal-header { background-color: var(--primary-color); color: white; padding: 1rem 1.5rem; border-top-left-radius: 7px; border-top-right-radius: 7px;}
+        .modal-header .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+        /* 将子模态加宽：更接近 2× 原宽度，同时不超过视口 */
+        .sub-modal .modal-dialog {
+        width: 90vw;          /* 视口 90% 宽度 */
+        max-width: 1200px;    /* 上限以桌面舒适宽度为目标 */
+        }
+
+        .form-label { font-weight: 600; color: var(--font-color); }
+        .form-control, .form-select { border-color: var(--border-color); transition: border-color .2s ease, box-shadow .2s ease; border-radius: 4px; }
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 0 3px rgba(0, 103, 198, 0.2); 
+            outline: none;
+        }
+        
+        .btn { transition: all 0.2s ease-in-out; border-radius: 4px; font-weight: 500;}
+        .btn-primary { 
+            background-color: var(--primary-color); 
+            border-color: var(--primary-color); 
+        }
+        .btn-primary:hover { 
+            background-color: var(--primary-color-hover); 
+            border-color: var(--primary-color-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 103, 198, 0.3);
+        }
+        .btn-danger { background-color: var(--status-red); border-color: var(--status-red); }
+        .btn-sm.btn-outline-success { color: var(--status-green); border-color: var(--status-green); }
+        .btn-sm.btn-outline-success:hover { background-color: var(--status-green); color: white; }
+        .btn-sm.btn-outline-danger { color: var(--status-red); border-color: var(--status-red); }
+        .btn-sm.btn-outline-danger:hover { background-color: var(--status-red); color: white; }
+        .btn-sm.btn-outline-primary { color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-sm.btn-outline-primary:hover { background-color: var(--primary-color); color: white; }
+
+
+        .table thead { position: sticky; top: 0; z-index: 1; background-color: var(--panel-bg-color) !important; border-bottom: 2px solid var(--primary-color); }
+        .table-hover tbody tr:hover { background-color: var(--title-highlight-bg); }
+        
+        .action-icons { display: flex; gap: 0.75rem; align-items: center; }
+        .action-icons i { cursor: pointer; margin: 0; font-size: 1.1rem; color: var(--secondary-color); transition: transform 0.2s, color 0.2s; }
+        .action-icons i:hover {
+            transform: scale(1.25);
+            text-shadow: 0 0 8px rgba(0,0,0,0.2);
+        }
+
+        .action-icons .fa-edit:hover { color: #f7630c; } 
+        .action-icons .fa-trash-alt:hover { color: var(--status-red); }
+        .action-icons .fa-print:hover { color: #0078d4; }
+        .action-icons .fa-copy:hover { color: var(--status-green); }
+        
+        .checkbox-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .checkbox-tag input { display: none; }
+        .checkbox-tag label { display: block; padding: 0.3rem 0.8rem; border: 1px solid var(--border-color); border-radius: 15px; cursor: pointer; transition: all 0.2s; }
+        .checkbox-tag input:checked + label { background-color: var(--primary-color); color: white; border-color: var(--primary-color); }
+        
+        .grade-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .grade-tag {
+            padding: 0.35rem 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        .grade-tag:hover {
+            border-color: var(--primary-color-hover);
+            color: var(--primary-color-hover);
+        }
+        .grade-tag.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .classmate-tags-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+        }
+        .classmate-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+        .classmate-tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .classmate-tag.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .homework-item { display: flex; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #f7fafc; }
+        .homework-item:last-child { border-bottom: none; }
+        .homework-text { flex-grow: 1; padding-right: 1rem; }
+        .homework-actions-wrapper { display: flex; align-items: center; flex-shrink: 0; gap: 0.75rem; }
+        .homework-status-select { width: 105px; }
+        
+        .student-homework-card { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; background-color: var(--panel-bg-color); box-shadow: var(--shadow-sm); transition: box-shadow 0.2s; }
+        .student-homework-card:hover { box-shadow: var(--shadow-md); }
+        .student-homework-card-header { background-color: var(--card-header-bg); padding: 0.75rem 1.25rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .student-homework-card-body { padding: 1.25rem; }
+        .homework-subject-group { margin-bottom: 1rem; }
+        .homework-subject-title { 
+            font-weight: bold; color: var(--primary-color); margin-bottom: 0.75rem; 
+            padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .status-uncompleted, .status-partial, .status-completed, .status-none { background-color: transparent; }
+
+        #progressTableBody span { padding: 0.2em 0.6em; border-radius: 4px; font-weight: 500; font-size: 0.8rem; }
+        .status-uncompleted-text { color: #c62828; background-color: var(--status-red-bg); }
+        .status-partial-text { color: #f57f17; background-color: var(--status-yellow-bg); }
+        .status-completed-text { color: #2e7d32; background-color: var(--status-green-bg); }
+        .status-none-text { color: #4a5568; background-color: var(--status-gray-bg); }
+        
+        .large-screen-status-label {
+            display: inline-block; flex-shrink: 0;
+            width: 65px; padding: 0.15rem 0; margin-right: 0.75rem;
+            border-radius: 4px; font-size: 0.7rem; font-weight: 600; text-align: center;
+        }
+
+        .large-screen-container { display: flex; height: 100%; gap: 1rem; }
+        .grade-region { flex: 1; border: 1px solid var(--border-color); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; background-color: var(--bg-color); }
+        .grade-region-header {
+            padding: 0.75rem; font-size: 1.25rem; font-weight: 600; text-align: center;
+            border-bottom: 1px solid var(--border-color); flex-shrink: 0;
+            background-color: var(--primary-color); color: white;
+        }
+        .grade-region-body { padding: 1rem; overflow-y: auto; }
+        .large-screen-card { background-color: var(--panel-bg-color); border-radius: 6px; margin-bottom: 1rem; box-shadow: var(--shadow-sm); overflow: hidden; }
+        .large-screen-card-header {
+            padding: 0.5rem 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--card-header-bg);
+            color: var(--font-color);
+        }
+        .large-screen-card-body { padding: 0.5rem 1rem; }
+        .large-screen-subject-title { font-weight: bold; color: var(--primary-color); padding: 0.5rem 0; }
+        .large-screen-homework-item { display: flex; align-items: center; padding: 0.3rem 0; }
+        
+        .large-screen-container .large-screen-status-label { color: white; }
+        .large-screen-container .status-red-bg { background-color: #d83b01 !important;
+  color: #ffffff !important; }
+        .large-screen-container .status-green-bg { background-color: #107c10 !important;
+  color: #ffffff !important; }
+        .large-screen-container .status-yellow-bg { background-color: #ffb900 !important;
+  color: #1e1e1e !important; }
+        .large-screen-container .status-uncompleted-text,
+        .large-screen-container .status-completed-text { color: inherit; }
+        /* === 日期分组样式 === */
+.large-screen-date-group {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--primary-color);
+  background-color: rgba(0,103,198,0.04);
+  border-radius: 4px;
+}
+
+.large-screen-date-group .text-muted {
+  font-weight: 600;
+  color: var(--primary-color) !important;
+  margin-bottom: 0.35rem;
+}
+.homework-date-group {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 3px solid var(--primary-color);
+  background-color: rgba(0,103,198,0.04);
+  border-radius: 4px;
+}
+.homework-date-group .text-muted {
+  font-weight: 600;
+  color: var(--primary-color) !important;
+}
+
+        .large-screen-homework-text {
+            word-break: break-word;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+        
+        @keyframes autoscroll { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+        .autoscroll-enabled { padding: 0; }
+        .autoscroll-enabled .autoscroll-content { animation: autoscroll 60s linear infinite; }
+        .autoscroll-enabled:hover .autoscroll-content { animation-play-state: paused; }
+
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 1080; }
+        .custom-toast { display: flex; align-items: center; padding: 1rem 1.5rem; color: white; border-radius: 8px; box-shadow: var(--shadow-lg); opacity: 0; transition: opacity 0.3s, transform 0.3s; transform: translateX(100%); }
+        .custom-toast.show { opacity: 1; transform: translateX(0); }
+        .custom-toast.success { background-color: var(--status-green); }
+        .custom-toast.error { background-color: var(--status-red); }
+        .custom-toast.info { background-color: var(--primary-color); }
+        
+        .subject-icon { display: inline-flex; flex-direction: column; align-items: center; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; min-width: 80px; transition: all .2s ease; }
+        .subject-icon i { font-size: 1.75rem; margin-bottom: 0.5rem; color: var(--secondary-color); transition: all .2s ease;}
+        .subject-icon span { font-size: 0.8rem; }
+        .subject-icon.selected, .subject-icon:hover { border-color: var(--primary-color); background-color: var(--title-highlight-bg); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .subject-icon.selected i, .subject-icon:hover i { color: var(--primary-color); }
+
+
+
+/* === UPDATED: Style for dynamically added homework task groups (最终修复 - 负外边距对齐法) === */
+
+/*父容器 (.subject-task-group): 恢复内容内边距，并启用圆角裁剪 */
+
+        .subject-task-group {
+  background-color: var(--panel-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  overflow: hidden; /* 保证圆角裁剪 */
+  transition: all 0.3s ease;
+}
+.subject-task-group:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 20px rgba(0, 103, 198, 0.2);
+  transform: translateY(-2px);
+}
+.subject-task-group > label.form-label {
+  display: block;
+  margin: -1rem -1rem 1rem -1rem;
+  background-color: var(--card-header-bg);
+  color: var(--font-color);
+  font-weight: 600;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  width: auto;
+  box-sizing: border-box;
+}
+.subject-task-group > textarea.form-control {
+  border: none;
+  resize: vertical;
+  padding: 0;
+  margin-bottom: 1rem;
+  border-radius: 0;
+  background-color: var(--panel-bg-color);
+}
+.subject-task-group > textarea.form-control:last-child {
+  margin-bottom: 0;
+}
+
+
+
+        #progressGradeFilter .checkbox-tag label {
+            padding: 0.15rem 0.4rem;
+            font-size: 0.8rem;
+            border-radius: 10px;
+        }
+        
+        .large-screen-screenshot-icon {
+            cursor: pointer;
+            margin-left: 0.75rem;
+            color: var(--secondary-color);
+            transition: color 0.2s, transform 0.2s;
+        }
+        .large-screen-screenshot-icon:hover {
+            color: var(--primary-color-hover);
+            transform: scale(1.2);
+        }
+
+        /* 全局模态框强制居中 */
+        .modal.show .modal-dialog {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+
+
+        /* Dark Mode Styles for Fullscreen */
+        #largeScreenModalBody.dark-mode { background-color: #121212 !important; }
+        #largeScreenModalBody.dark-mode .grade-region { background-color: #00000000; border-color: #00000000; }
+        #largeScreenModalBody.dark-mode .grade-region-header { background-color: #00000000; color: #f1f1f1; border-bottom-color: #00000000; }
+        #largeScreenModalBody.dark-mode .large-screen-card { background-color: #2b2b2b; border: 1px solid #444; }
+        #largeScreenModalBody.dark-mode .large-screen-card-header { background-color: #333; color: #d4ed31; border-bottom-color: #444; }
+        #largeScreenModalBody.dark-mode .large-screen-subject-title { color: #e0e0e0; }
+        #largeScreenModalBody.dark-mode .large-screen-homework-text { color: #c5c5c5; }
+        #largeScreenModalBody.dark-mode .text-muted { color: #6c757d !important; }
+        #largeScreenModalBody.dark-mode .large-screen-status-label { color: #ffffff; font-weight: bold; }
+        #largeScreenModalBody.dark-mode .status-red-bg { background-color: #d83b01; }
+        #largeScreenModalBody.dark-mode .status-green-bg { background-color: #107c10; }
+        #largeScreenModalBody.dark-mode .status-yellow-bg { background-color: #ffb900; color: #1e1e1e; }
+
+        /* 网络状态指示器样式 */
+        .network-status {
+            position: fixed;
+            bottom: 1px;                 /* 垂直居中基准 */
+            left: 1px;              /* 靠右边框 */
+            transform: translateY(-50%); /* 向上偏移自身高度的一半，实现垂直居中 */
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            z-index: 9999; /* Changed to be on top of everything */
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .network-status.online {
+            background-color: var(--status-green);
+            color: white;
+        }
+
+        .network-status.offline {
+            background-color: var(--status-red);
+            color: white;
+        }
+
+        .network-status.syncing {
+            background-color: var(--status-yellow);
+            color: var(--font-color);
+        }
+
+        .network-status.error {
+            background-color: var(--status-red);
+            color: white;
+        }
+        /* === 教育风格登录背景 & 悬浮登录框 (paste after existing styles) === */
+
+/* 覆盖原来的简单背景，做分层光斑 + 纸格纹理 */
+#loginOverlay {
+  background-color: transparent !important; /* 覆盖 inline */
+  background-image:
+    radial-gradient(1200px 600px at 8% 18%, rgba(0,103,198,0.10), transparent 16%),
+    radial-gradient(900px 500px at 92% 82%, rgba(0,150,200,0.06), transparent 20%),
+    linear-gradient(180deg, #f8fbff 0%, var(--bg-color) 100%);
+  background-repeat: no-repeat;
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 2000;
+  overflow: hidden;
+  transition: opacity .45s ease, visibility .45s ease;
+}
+
+/* 两个大模糊光斑，营造柔和层次 */
+#loginOverlay::before,
+#loginOverlay::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  filter: blur(28px);
+  opacity: 0.34;
+}
+#loginOverlay::before {
+  left: -12%;
+  top: -8%;
+  width: 62%;
+  height: 62%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0.02) 40%);
+  transform: rotate(-12deg);
+}
+#loginOverlay::after {
+  right: -12%;
+  bottom: -6%;
+  width: 62%;
+  height: 62%;
+  background: radial-gradient(circle at 70% 70%, rgba(0,103,198,0.12), rgba(0,103,198,0) 40%);
+  transform: rotate(8deg);
+}
+
+/* 轻微的“作业纸/网格”层（像方格纸/教学笔记） */
+#loginOverlay .login-grid {
+  position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 30px 30px, 30px 30px;
+  mix-blend-mode: overlay;
+  opacity: 0.20;
+}
+
+/* 装饰性的教育图标（FontAwesome），不影响交互 */
+#loginOverlay .login-decor { position: absolute; inset:0; pointer-events: none; z-index: 3; }
+#loginOverlay .login-decor .decor-icon {
+  position: absolute;
+  font-size: 68px;
+  opacity: 0.08;
+  color: var(--primary-color);
+  transform-origin: center;
+  filter: drop-shadow(0 6px 16px rgba(0,0,0,0.06));
+}
+#loginOverlay .login-decor .book  { left: 6%;  top: 18%; transform: rotate(-12deg); }
+#loginOverlay .login-decor .pencil { right: 8%; bottom: 20%; transform: rotate(18deg); }
+#loginOverlay .login-decor .cap    { left: 50%; top: 6%; transform: translateX(-50%) rotate(6deg); }
+
+/* 悬浮卡片（登录框）—— 玻璃态 + 轻投影 + 漂浮动画 */
+#loginBox {
+  position: relative;
+  z-index: 10;
+  width: min(420px, 92%);
+  padding: 2.25rem;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.84));
+  box-shadow: 0 20px 60px rgba(3,46,86,0.18), 0 6px 20px rgba(3,46,86,0.08);
+  border: 1px solid rgba(0,0,0,0.04);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  transition: transform .35s ease, box-shadow .35s ease;
+  animation: floatCard 6s ease-in-out infinite;
+}
+
+/* 登录卡片顶部的细长渐变条（视觉锚点） */
+#loginBox::before {
+  content: "";
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  top: -12px;
+  width: 88px; height: 8px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--primary-color), var(--primary-color-hover));
+  box-shadow: 0 8px 20px rgba(0,103,198,0.18);
+}
+
+/* 轻柔的“漂浮”动画 */
+@keyframes floatCard {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+/* 表单微调 */
+#loginBox .fas.fa-user-graduate {
+  font-size: 3rem;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+  text-shadow: 0 4px 18px rgba(0,103,198,0.08);
+}
+
+#loginBox h3 { margin-bottom: 1.2rem; color: var(--font-color); font-weight:600; }
+
+#loginBox .form-control {
+  border-radius: 8px;
+  padding: .62rem .75rem;
+  border: 1px solid var(--border-color);
+  box-shadow: none;
+}
+#loginBox .btn-primary {
+  border-radius: 8px;
+  padding: .58rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,103,198,0.16);
+}
+
+/* 响应式 */
+@media (max-width: 420px) {
+  #loginOverlay .login-decor .decor-icon { font-size:46px; }
+  #loginBox { padding: 1.2rem; border-radius: 12px; }
+}
+/* === 优化后的学生作业卡片样式（含暗色模式） === */
+
+.student-homework-card {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background-color: var(--panel-bg-color);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.student-homework-card-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.25rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.student-homework-card-body {
+  padding: 1.25rem;
+  transition: background-color 0.3s ease;
+}
+
+/* 悬浮高亮效果 */
+.student-homework-card:hover {
+  /* background-color: rgba(0, 103, 198, 0.05); */
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 20px rgba(0, 103, 198, 0.2);
+  transform: translateY(-2px);
+}
+
+/* 暗色模式适配 */
+#largeScreenModalBody.dark-mode .student-homework-card {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+#largeScreenModalBody.dark-mode .student-homework-card-header {
+  background-color: #0078d4;
+  color: #ffffff;
+  border-bottom: 1px solid #555;
+}
+
+#largeScreenModalBody.dark-mode .student-homework-card-body {
+  background-color: #2b2b2b;
+  color: #e0e0e0;
+}
+
+#largeScreenModalBody.dark-mode .student-homework-card:hover {
+  /* background-color: rgba(0, 103, 198, 0.1); */
+  border-color: #0078d4;
+  box-shadow: 0 10px 24px rgba(0,103,198,0.3);
+}
+
+/* 主页面作业卡片右侧图标悬浮颜色适配 */
+.action-icons .fa-edit:hover {
+  color: var(--status-yellow); /* 改为语义色：编辑 */
+}
+.action-icons .fa-trash-alt:hover {
+  color: var(--status-red); /* 删除 */
+}
+.action-icons .fa-print:hover {
+  color: var(--primary-color); /* 打印 */
+}
+.action-icons .fa-copy:hover {
+  color: var(--status-green); /* 复制 */
+}
+
+/* 暗色模式下图标悬浮颜色增强 */
+#largeScreenModalBody.dark-mode .action-icons i:hover {
+  text-shadow: 0 0 6px rgba(255,255,255,0.2);
+}
+
+
+/* 暗色模式适配 */
+#largeScreenModalBody.dark-mode .subject-task-group {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+#largeScreenModalBody.dark-mode .subject-task-group:hover {
+  background-color: rgba(0, 103, 198, 0.1);
+  border-color: #0078d4;
+  box-shadow: 0 10px 24px rgba(0,103,198,0.3);
+}
+
+.large-screen-card {
+  background-color: var(--panel-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.large-screen-card:hover {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: inherit !important;
+  transform: none !important;
+}
+
+
+/* 暗色模式适配 */
+#largeScreenModalBody.dark-mode .large-screen-card {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+#largeScreenModalBody.dark-mode .large-screen-card:hover {
+  background-color: rgba(0, 103, 198, 0.1);
+  border-color: #0078d4;
+  box-shadow: 0 10px 24px rgba(0,103,198,0.3);
+}
+
+/* 暗色模式下统一标题背景色 */
+#largeScreenModalBody.dark-mode .student-homework-card-header,
+#largeScreenModalBody.dark-mode .subject-task-group > label.form-label,
+#largeScreenModalBody.dark-mode .large-screen-card-header {
+  background-color: #0078d4;
+  color: #ffffff;
+}
+/* 暗色模式下：日期文字高亮 */
+#largeScreenModalBody.dark-mode .large-screen-date-group .text-muted {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* 暗色模式下：作业任务文字高亮 */
+#largeScreenModalBody.dark-mode .large-screen-homework-text {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* 主页面作业卡片标题行右侧图标颜色设置为白色 */
+.student-homework-card-header .action-icons i {
+  color: white;
+  opacity: 0.9;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.student-homework-card-header .action-icons i:hover {
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255,255,255,0.3);
+  transform: scale(1.2);
+}
+
+/* 暗色模式下大屏截图按钮颜色设置为白色 */
+#largeScreenModalBody.dark-mode .large-screen-screenshot-icon {
+  color: #ffffff;
+  opacity: 0.9;
+}
+
+#largeScreenModalBody.dark-mode .large-screen-screenshot-icon:hover {
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255,255,255,0.3);
+  transform: scale(1.2);
+}
+
+/* 浅色模式下：加深大屏作业卡片标题行背景色 */
+.large-screen-card-header {
+  background-color: #cce4f9; /* 更饱和的浅蓝色 */
+  color: var(--font-color);
+}
+
+/* 主页面：移除每条作业任务项背景色 */
+.homework-item {
+  background: none !important;
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0;
+}
+
+/* 大屏模组：移除每条作业任务项背景色 */
+.large-screen-homework-item {
+  background: none !important;
+  padding: 0.3rem 0.75rem;
+  border-radius: 0;
+}
+
+/* 暗色模式下也保持无背景 */
+#largeScreenModalBody.dark-mode .large-screen-homework-item {
+  background: none !important;
+}
+
+.large-screen-card:hover,
+#largeScreenModalBody.dark-mode .large-screen-card:hover {
+  background-color: transparent !important;
+  border-color: inherit !important;
+  box-shadow: inherit !important;
+  transform: none !important;
+}
+
+/* 大屏学生作业卡片悬浮时边框透明（暗色模式） */
+#largeScreenModalBody.dark-mode .large-screen-card:hover {
+  border-color: transparent !important;
+}
+
+/* 左侧登记面板：作为弹性列容器，禁用自身滚动 */
+#homeworkRegistrationPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden; /* 防止外层再滚动 */
+  gap: 0.5rem;      /* 步骤之间微距 */
+}
+
+/* 内部滚动容器：仅从 “3.输入作业任务” 开始的内容滚动 */
+#registrationScrollContainer {
+  flex: 1 1 auto;
+  min-height: 0;        /* 让 flex 子项正确计算高度 */
+  overflow-y: auto;     /* 启用垂直滚动 */
+  padding-right: 10px;  /* 与全局滚动条样式一致 */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 保持按钮靠底部且不被遮挡（随滚动区域一起滚） */
+#registrationScrollContainer #registerHomeworkBtn {
+  margin-top: auto;
+}
+
+/* 顶部两步在滚动时保持清晰的视觉分隔 */
+#homeworkRegistrationPanel .form-label {
+  margin-bottom: 0.35rem;
+}
+
+.student-panel {
+  height: 100%;
+  overflow: hidden;
+}
+
+.student-filter-bar {
+  padding: 1rem 1.25rem 0 1.25rem;
+  background-color: var(--card-header-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.student-table-wrapper {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0 1.25rem 1.25rem 1.25rem;
+}
+
+.student-table-wrapper table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.student-table-wrapper thead.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--panel-bg-color);
+}
+
+/* 让模态内容成为纵向布局，便于固定头尾 */
+#bulkInputModal .modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;          /* 总高度上限 */
+}
+
+/* 仅主体滚动，头尾固定 */
+#bulkInputModal .bulk-scroll-body {
+  overflow-y: auto;
+  padding: 0 1rem 1rem 1rem; /* 与Bootstrap间距一致 */
+}
+
+/* 预览区域最小高度并允许内部滚动（多内容时更友好） */
+/*#bulkInputModal .bulk-preview-box {
+  min-height: 80px;
+  max-height: 40vh;
+  overflow-y: auto;
+  background: #fafafa;
+}
+
+/* 左右两栏容器：并排布局 + 间距 */
+#bulkInputModal .bulk-two-col {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+
+/* 每一栏统一高度与滚动行为 */
+#bulkInputModal .bulk-pane {
+  flex: 1 1 0;
+  min-height: 40vh;     /* 两栏的基础高度 */
+  max-height: 52vh;     /* 防止过高，留出底部按钮空间 */
+  overflow-y: auto;     /* 超出垂直滚动 */
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+/* 让左侧 textarea 充满容器高度，内部滚动 */
+#bulkInputModal .bulk-pane textarea#bulkInputTextarea {
+  min-height: 36vh;     /* 与右侧预览接近 */
+  height: 100%;         /* 自适应填满容器 */
+  overflow-y: auto;
+}
+
+/* 标签与内边距微调，避免文字贴边 */
+#bulkInputModal .bulk-pane .form-label {
+  margin-bottom: 0.5rem;
+}
+
+#bulkInputModal .bulk-pane #bulkInputPreview {
+  min-height: 36vh;
+  overflow-y: auto;
+  background: #fff;
+}
+
+/* 头部“目标科目”块与主体的间距协调 */
+#bulkInputModal .modal-header {
+  flex-shrink: 0;
+}
+#bulkInputModal .modal-footer {
+  flex-shrink: 0;
+}
+
+/* OCR modal layout follows bulk modal conventions */
+#ocrInputModal .modal-content {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+#ocrInputModal .modal-header { flex-shrink: 0; }
+#ocrInputModal .modal-footer { flex-shrink: 0; }
+#ocrInputModal .ocr-scroll-body {
+  overflow-y: auto;
+  padding: 0 1rem 1rem 1rem;
+}
+#ocrInputModal .ocr-two-col {
+  display: flex;
+  gap: 1rem;
+  align-items: stretch;
+}
+#ocrInputModal .ocr-pane {
+  flex: 1 1 0;
+  min-height: 40vh;
+  max-height: 52vh;
+  overflow-y: auto;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+/* 左右区域对齐：右侧预览与左侧 textarea 同高 */
+#ocrInputModal .ocr-pane {
+  display: flex;
+  flex-direction: column;
+}
+
+#ocrInputModal .ocr-pane .form-label { margin-bottom: 0.5rem; }
+#ocrInputModal .ocr-input-dropzone {
+  position: relative;
+  border: 2px dashed var(--border-color);
+  border-radius: 6px;
+  padding: 0.75rem;
+  background: #fff;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* 防止内容溢出 */
+}
+#ocrInputModal .ocr-input-dropzone.dragover {
+  border-color: var(--primary-color);
+  background: rgba(0, 103, 198, 0.06);
+}
+#ocrInputModal .ocr-image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* 保持比例缩放 */
+  border-radius: 4px;
+  display: block;
+}
+#ocrInputModal .ocr-textarea {
+  margin-top: 0.5rem;
+  min-height: 210px;  /* 原来约140px，增加50% */
+  resize: vertical;
+}
+#ocrInputModal .ocr-preview-box {
+  min-height: 36vh;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem;
+}
+
+#ocrInputModal .ocr-preview-box {
+  flex-grow: 1;
+  min-height: 210px; /* 与左侧 textarea 对齐 */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Bright progress pill shown during OCR */
+#ocrInputModal .ocr-progress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  background: var(--status-yellow);
+  color: #1e1e1e;
+  box-shadow: var(--shadow-sm);
+}
+#ocrInputModal .ocr-progress-pill .spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.6);
+  border-top-color: #1e1e1e;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#ocrInputModal .ocr-progress-pill.done {
+  background: var(--status-green);
+  color: #fff;
+}
+#ocrInputModal .ocr-progress-pill.error {
+  background: var(--status-red);
+  color: #fff;
+}
+
+/* === 打印优化：放大作业任务字体 === */
+ @media print {
+  .student-homework-card .table td,
+  .student-homework-card .table th {
+    font-size: 1.1rem;   /* 字体放大 */
+    line-height: 1.6;    /* 行距更舒适 */
+  }
+}
+
+/*
+ * === 模态框左右布局修复 (V3 - 最终版) ===
+ *
+ * 1. bulkInputModal: 左右两侧均保持固定的 36vh 高度。
+ * 2. ocrInputModal: 左侧 textarea 保持固定 210px 高度，
+ * 右侧 preview 自动伸展 (flex-grow: 1) 以填满空白，消除不平衡感。
+ */
+
+/* * 1. Bulk Input Modal (整段输入)
+ * (保持固定高度)
+ */
+#bulkInputModal .bulk-pane textarea#bulkInputTextarea {
+  height: 36vh;
+  min-height: 36vh;
+  max-height: 36vh;
+  overflow-y: auto;
+  resize: none;
+}
+#bulkInputModal .bulk-pane #bulkInputPreview {
+  height: 36vh;
+  min-height: 36vh;
+  max-height: 36vh;
+  overflow-y: auto;
+  background: #fff;
+  flex-grow: 0; 
+}
+
+/* * 2. OCR Input Modal (图片识别)
+ * (左侧固定，右侧按左侧总高度固定)
+ */
+
+ /* 2.0. (新增修复) 左侧 Dropzone: 保持固定 220px 高度，不伸展 */
+#ocrInputModal .ocr-input-dropzone {
+  height: 220px;
+  min-height: 220px; /* 保持一致 */
+  max-height: 220px; /* 保持一致 */
+  flex-grow: 0;      /* 禁止伸展 */
+}
+
+/* 2.1. 左侧 textarea: 保持固定 210px 高度，不伸展 */
+#ocrInputModal .ocr-textarea {
+  height: 210px;
+  min-height: 210px;
+  max-height: 210px;
+  overflow-y: auto;
+  resize: none;
+  flex-grow: 0; /* 禁止伸展 */
+}
+
+/* 2.2. 右侧 preview: 高度固定为与左侧内容总高度一致，不伸展 */
+#ocrInputModal .ocr-preview-box {
+  /* * 计算左侧内容总高度: 
+   * 220px (Dropzone min-height) + 0.5rem (Textarea margin-top) + 210px (Textarea min-height)
+   */
+  height: calc(220px + 0.5rem + 210px);
+  min-height: calc(220px + 0.5rem + 210px); /* 保持一致 */
+  max-height: calc(220px + 0.5rem + 210px); /* 保持一致 */
+  
+  overflow-y: auto;  /* 启用滚动 */
+  flex-grow: 0;      /* 禁止伸展 */
+}
+
+/* === (新) 合约状态高亮样式 === */
+        #contractTableBody .status-cell span {
+            padding: 0.2em 0.6em;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        #contractTableBody .status-valid {
+            /* 生效中 (默认) */
+            color: #2e7d32; 
+            background-color: var(--status-green-bg);
+        }
+        #contractTableBody .status-warning {
+            /* 即将过期 (黄色) */
+            color: #f57f17;
+            background-color: var(--status-yellow-bg);
+        }
+        #contractTableBody .status-expired {
+             /* 已过期 (红色) */
+            color: #c62828;
+            background-color: var(--status-red-bg);
+        }
+        #contractTableBody .status-archived {
+            /* 已续约 / 已终止 (灰色) */
+            color: #4a5568;
+            background-color: var(--status-gray-bg);
+        }
+        #contractTableBody .status-renewed {
+    /* 已续约 (淡蓝色) */
+    color: #1565c0;
+    background-color: var(--status-blue-bg);
+}
+#contractTableBody .status-terminated {
+    /* 已终止 (淡红色) */
+    color: #b71c1c;
+    background-color: var(--status-light-red-bg);
+}
+
+/* 看板卡片 */
+.dash-card {
+  background-color: var(--panel-bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
+}
+.dash-card:hover { box-shadow: var(--shadow-md); }
+
+.dash-card-header {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .5rem .75rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--card-header-bg);
+}
+.dash-card-header.danger { color: #c62828; }
+.dash-card-header.warning { color: #f57f17; }
+.dash-card-header i { font-size: 1rem; color: inherit; }
+
+.dash-card-body { padding: .75rem .9rem; }
+
+.dash-kpi {
+  font-size: 2rem; font-weight: 700; color: var(--primary-color);
+  line-height: 1.2;
+}
+.dash-sub { font-size: .85rem; color: var(--secondary-color); }
+
+.dash-list .dash-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .25rem 0;
+  border-bottom: 1px dashed var(--border-color);
+}
+.dash-list .dash-item:last-child { border-bottom: none; }
+.dash-list .label { font-weight: 500; color: var(--font-color); }
+.dash-list .value { color: var(--secondary-color); }
+
+.dash-table-wrapper { max-height: 40vh; overflow: auto; }
+
+/* 暗色模式适配（如果未来需要） */
+#dashboardModalBody.dark-mode .dash-card {
+  background-color: #2b2b2b; border-color: #444;
+}
+#dashboardModalBody.dark-mode .dash-card-header {
+  background-color: #333; color: #d4ed31; border-bottom-color: #444;
+}
+
+/* dashboardModule中过期与即将到期列表 表格容器：限制高度并允许滚动 */
+.dash-table-wrapper {
+  max-height: 40vh;   /* 最大高度占视口 40% */
+  overflow-y: auto;   /* 垂直滚动 */
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+/* 已过期表头：红色背景，黑色加粗字体，sticky */
+.dash-expired-thead {
+  background-color: var(--status-red-bg);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.dash-expired-thead th {
+  color: #000000;
+  font-weight: 700;
+}
+
+/* 即将到期表头：黄色背景，黑色加粗字体，sticky */
+.dash-expiring-thead {
+  background-color: var(--status-yellow-bg);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.dash-expiring-thead th {
+  color: #000000;
+  font-weight: 700;
+}
+
+
+/* 服务类型图标（单选） */
+.service-type-icon {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 86px;
+  transition: all .2s ease;
+  background: #fff;
+}
+.service-type-icon i {
+  font-size: 1.35rem;
+  margin-bottom: 0.35rem;
+  color: var(--secondary-color);
+  transition: all .2s ease;
+}
+.service-type-icon span {
+  font-size: 0.85rem;
+}
+.service-type-icon.selected, .service-type-icon:hover {
+  border-color: var(--primary-color);
+  background-color: var(--title-highlight-bg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+.service-type-icon.selected i, .service-type-icon:hover i {
+  color: var(--primary-color);
+}
+
+
+
+
+/* 如果使用了 .table-hover 的默认浅蓝，需要明确覆盖 */
+.table.table-hover #contractTableBody tr:hover {
+  background-color: #1864d657 !important;
+}
+
+/* 如果使用了 .table-striped 的偶数行背景，确保悬停时覆盖 */
+.table.table-striped #contractTableBody tr:hover td,
+.table.table-striped #contractTableBody tr:hover th {
+  background-color: #a3daffd8 !important;
+}
+
+
+/* === 浮动姓名卡片样式（无标题） === */
+.grade-region {
+  position: relative; /* 确保浮动卡片定位基准 */
+}
+
+.floating-name-card {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  
+  max-height: 25vh; /* 限制最大高度为视口高度的60% */
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 103, 198, 0.25);
+  padding: 0.5rem 0.75rem; /* 缩小内边距 */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 0.85rem;
+  z-index: 2000; /* 保证在最上层 */
+}
+
+.floating-name-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.floating-name-card ul li {
+  padding: 0.25rem 0;
+  border-bottom: 1px dashed var(--border-color);
+  color: var(--font-color);
+  font-weight: 600; /* 加粗字体 */
+  font-size: 0.8rem; /* 缩小字号 */
+}
+.floating-name-card ul li:last-child {
+  border-bottom: none;
+}
+
+/* === 暗色模式下浮动卡片字体优化 === */
+#largeScreenModalBody.dark-mode .floating-name-card ul li {
+  color: #ffffff;           /* 纯白色，确保在深色背景下清晰可见 */
+  font-weight: 600;         /* 加强加粗效果 */
+  font-size: 0.8rem; /* 缩小字号 */
+  text-shadow: 0 0 2px #000; /* 增加微弱阴影，提升可读性 */
+}
+
+/* === (新) 浮动姓名卡片指示器样式 === */
+
+/* 调整 li 以便容纳指示器 */
+.floating-name-card ul li {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* 姓名和指示器之间的间距 */
+  font-weight: 600; /* (保持原有加粗) */
+  font-size: 0.8rem; /* (保持原有字号) */
+}
+
+/* 指示器默认样式 (不可见时) */
+.floating-name-card .indicator {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #6c757d; /* 默认：灰色 (暗) */
+  opacity: 0.4;
+  transition: background-color 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 当卡片可见时，指示器高亮并闪烁 */
+.floating-name-card .indicator.is-visible {
+  background-color: #107c10; /* 绿色 */
+  opacity: 1;
+  box-shadow: 0 0 5px #107c10;
+  animation: blink 1.2s infinite ease-in-out;
+}
+
+/* 暗色模式下的高亮 */
+#largeScreenModalBody.dark-mode .floating-name-card .indicator.is-visible {
+  background-color: #37ed31; /* 暗色模式高亮黄绿色 */
+  box-shadow: 0 0 6px #d4ed31;
+}
+
+/* 暗色模式下字体 (保持原有) */
+#largeScreenModalBody.dark-mode .floating-name-card ul li {
+  color: #ffffff;
+  text-shadow: 0 0 2px #000;
+}
+
+/* 闪烁动画 */
+@keyframes blink {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.7);
+    opacity: 0.6;
+  }
+}
+
+
+/* --- 适用于 Chrome, Edge, Safari (Webkit/Blink 内核) --- */
+.floating-name-card::-webkit-scrollbar {
+    width: 0px; /* 滚动条变细 (往细) */
+    /* 垂直滚动条的宽度 */
+}
+
+/* === (新) 优化下拉复选框 UI 风格 === */
+
+/* 1. 容器：应用系统标准的圆角、边框和阴影 */
+.dropdown-menu[aria-labelledby="filterStudentNameBtn"],
+.dropdown-menu[aria-labelledby="filterCompletionStatusBtn"] {
+  padding: 0; /* 移除 Bootstrap 默认 padding */
+  border: 1px solid var(--border-color); /* */
+  border-radius: 3px; /* 匹配系统圆角 */
+  box-shadow: var(--shadow-md); /* 匹配系统阴影 */
+  /* overflow: hidden; */ /* <--- 移除这一行 */
+
+  /* (新) 自动适配视口高度 */
+  max-height: 60vh;   /* <--- 设置最大高度为视口的60% */
+  overflow-y: auto;   /* <--- 内容超出时自动显示垂直滚动条 */
+}
+
+/* 2. 头部：应用系统标题栏背景色 (var(--card-header-bg)) */
+.dropdown-menu .dropdown-menu-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  /* (关键) 应用系统UI风格 */
+  background-color: var(--card-header-bg); /* */
+  color: var(--primary-color); /* */
+  
+  padding: 0.75rem 1rem; /* 增加内边距 */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color); /* */
+  font-size: 0.9rem;
+  font-weight: 600; /* */
+}
+
+/* 3. 清空图标 (保持不变) */
+#clearStudentFilterIcon {
+  cursor: pointer;
+  color: var(--secondary-color);
+  font-size: 1rem;
+}
+#clearStudentFilterIcon:hover {
+  color: var(--status-red);
+  transform: scale(1.1);
+}
+
+/* 4. 列表容器：应用自定义滚动条并增加内边距 */
+.dropdown-menu .dropdown-menu-list {
+  max-height: 250px; 
+  overflow-y: auto;
+  padding: 0.25rem 0; /* 列表上下留白 */
+}
+
+/* 5. 列表项 (.form-check)：修复对齐和内边距 */
+.dropdown-menu .form-check {
+  /* (关键) 统一内边距，使其与 header 文本对齐 */
+  padding: 0.25rem 1rem; 
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+}
+
+/* 6. 列表项 hover 状态：应用系统高亮色 */
+.dropdown-menu .form-check:hover {
+    background-color: var(--title-highlight-bg); /* */
+}
+
+/* 7. 列表项文字 (保持不变) */
+.dropdown-menu .form-check-label {
+  font-size: 0.8rem;   
+  font-weight: 500;  
+  white-space: nowrap; /* (关键) 确保这里是 nowrap */
+  cursor: pointer;
+}
+
+/* 8. (新) 应用自定义滚动条 (已修复) */
+.dropdown-menu .dropdown-menu-list::-webkit-scrollbar,
+#filterStudentNameContainer::-webkit-scrollbar {
+    width: 4px; /* */
+}
+.dropdown-menu .dropdown-menu-list::-webkit-scrollbar-track,
+#filterStudentNameContainer::-webkit-scrollbar-track {
+    background: var(--panel-bg-color); /* (原为 transparent) */
+}
+.dropdown-menu .dropdown-menu-list::-webkit-scrollbar-thumb,
+#filterStudentNameContainer::-webkit-scrollbar-thumb {
+    background: var(--primary-color); /* */
+    border-radius: 3px;
+}
+.dropdown-menu .dropdown-menu-list::-webkit-scrollbar-thumb:hover,
+#filterStudentNameContainer::-webkit-scrollbar-thumb:hover {
+    background: #ffb900; /* 匹配系统滚动条 hover */
+}
+
+/* === 修复：下拉筛选框UI问题 === */
+
+/* 1. 解决错行问题：强制Flex布局 */
+.dropdown-menu .dropdown-item-text {
+    display: flex;
+    align-items: flex-start; /* 顶部对齐，防止复选框跑到多行文本的中间 */
+    padding: 0.35rem 1rem; /* 统一内边距 */
+}
+
+.dropdown-menu .dropdown-item-text .form-check-input {
+    flex-shrink: 0; /* 防止复选框被压缩 */
+    margin-top: 0.2em; /* 微调复选框垂直位置，使其与文本首行对齐 */
+}
+/* === (新) 修复：统一下拉筛选按钮与日期框的样式 === */
+.btn-datepicker-style {
+    /* 1. 匹配 form-control 的背景和字体 */
+    background-color: var(--panel-bg-color);
+    color: var(--font-color);
+    
+    /* 2. 匹配 form-control 的边框 */
+    border: 1px solid var(--border-color);
+    
+    /* 3. 确保文字在按钮内部左对齐 (来自您之前的内联样式) */
+    text-align: left !important; 
+}
+
+/* 4. 匹配 form-control 的 :focus 状态 (当悬停或下拉菜单打开时) */
+.btn-datepicker-style:hover,
+.btn-datepicker-style:active,
+.btn-datepicker-style.show { /* .show 是 Bootstrap 在下拉菜单打开时添加的类 */
+    background-color: var(--panel-bg-color);
+    color: var(--font-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 103, 198, 0.2);
+}
+
+/* 5. 确保 Bootstrap 的 .dropdown-toggle 箭头颜色也正确 */
+.btn-datepicker-style::after {
+    color: var(--font-color);
+}
+
+
+/*
+========================================
+ PROGRESS MODULE - TABLE STYLING
+========================================
+*/
+
+/* 1. 确保模态框内的表格正确布局 */
+#progressModal .table-responsive {
+    max-height: 90vh; /* 限制表格最大高度，超出则滚动 */
+    overflow-y: auto;
+}
+
+#progressModal .table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse; /* 边框合并 */
+    font-size: 0.9rem; /* 稍小的字体 */
+}
+
+/* 2. 表格头部 (th) 样式 */
+#progressModal .table th {
+    background-color: #343a40; /* Bootstrap 'bg-dark' 颜色 */
+    color: #ffffff;
+    border-color: #454d55;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.4rem;
+    vertical-align: middle;
+    text-align: center;
+    font-weight: 600;
+    /* 关键：让表头在垂直滚动时固定 */
+    position: sticky;
+    top: 0;
+    z-index: 10; /* 确保在其他内容之上 */
+}
+
+/* 3. 表格单元格 (td) 样式 */
+#progressModal .table td {
+    border: 1px solid #dee2e6;
+    padding: 0.4rem 0.4rem;
+    vertical-align: middle;
+    text-align: center;
+    transition: background-color 0.15s ease-in-out; /* 为悬停添加过渡 */
+}
+
+/* 4. 定义状态单元格的背景色 */
+/* (我们直接设置 <td> 的背景，而不是 span 的文字颜色) */
+#progressModal .table .status-completed {
+    background-color: #e6f7ec;
+    color: #28a745;
+    font-weight: 500;
+}
+#progressModal .table .status-partial {
+    background-color: #fff8e1;
+    color: #ffa000;
+    font-weight: 500;
+}
+#progressModal .table .status-uncompleted {
+    background-color: #fbe9e7;
+    color: #d32f2f;
+    font-weight: 500;
+}
+#progressModal .table .status-none {
+    background-color: #f5f5f5;
+    color: #757575;
+}
+
+/* 5. (核心) 鼠标悬停整行高亮 */
+#progressModal #progressTableBody tr:hover {
+    cursor: default; /* 明确鼠标样式，表示不可点击 */
+}
+
+/* 5a. 悬停时，普通单元格的背景 */
+#progressModal #progressTableBody tr:hover td {
+    background-color: #e7f7a3;
+}
+
+/* 5b. 悬停时，状态单元格也改变背景（变为稍暗的颜色）*/
+#progressModal #progressTableBody tr:hover .status-completed {
+    background-color: #d4f0df;
+}
+#progressModal #progressTableBody tr:hover .status-partial {
+    background-color: #fbecd4;
+}
+#progressModal #progressTableBody tr:hover .status-uncompleted {
+    background-color: #f8e1de;
+}
+#progressModal #progressTableBody tr:hover .status-none {
+    background-color: #ebebeb;
+}
+
+/* === 合约重叠检测样式 === */
+.overlap-group-card {
+    border: 1px solid #f5c6cb;
+    background-color: #fff;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.overlap-group-header {
+    background-color: #fde8e8; /* 浅红色背景 */
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    color: #333333;
+    border-bottom: 1px solid #f5c6cb;
+}
+
+.overlap-group-body {
+    padding: 0.75rem 1rem;
+}
+
+.overlap-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #eee;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.overlap-item:last-child {
+    border-bottom: none;
+}
+
+/* 高亮重叠日期的样式 */
+.date-highlight-conflict {
+    color: #d83b01;
+    font-weight: 700;
+    background-color: #ffebee;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #ffcdd2;
+}
+
+/* === Header 用户信息显示优化 === */
+
+/* 1. 垂直排列容器 */
+.header-title-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1.1; /* 紧凑行高 */
+}
+
+/* 2. 主标题微调（确保不会太大影响布局） */
+.platform-header h1 {
+    font-size: 1.65rem; /* 稍微调小一点点以适应两行 */
+    margin-bottom: 2px; /* 标题和用户名的间距 */
+}
+
+/* 3. 用户名小字样式 */
+.current-user-text {
+    font-size: 0.85rem;
+    font-weight: 400;
+    opacity: 0.85; /*稍微透明一点，突出主标题*/
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* =========================================
+   1. 卡片微动效 (Micro-interactions)
+   ========================================= */
+/* 让卡片在悬停时轻微上浮并加深阴影，产生“物理质感” */
+.student-homework-card, 
+.dash-card, 
+.subject-task-group {
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease;
+}
+
+.student-homework-card:hover, 
+.dash-card:hover,
+.subject-task-group:hover {
+    transform: translateY(-4px); /* 上浮 4px */
+    box-shadow: 0 12px 24px rgba(0, 103, 198, 0.15); /* 阴影扩散 */
+}
+
+/* =========================================
+   2. Header 用户身份增强 (Avatar & Badge)
+   ========================================= */
+.user-identity-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 角色标签 (Badge) */
+.user-role-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.user-role-badge.admin {
+    background-color: #ffd700; /* 金色 */
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.user-role-badge.teacher {
+    background-color: rgba(255, 255, 255, 0.25);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* === 全屏锁定遮罩层 === */
+.screen-lock-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    /* z-index 必须极高，Bootstrap Modal 是 1055，Toast 是 1090，这里设为 9999 确保最顶层 */
+    z-index: 9999; 
+    background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+    backdrop-filter: blur(5px); /* 背景模糊效果，提升质感 */
+    -webkit-backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease;
+}
+
+/* 禁止页面在遮罩层下滚动 */
+body.screen-locked {
+    overflow: hidden !important;
+}

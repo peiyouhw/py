@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培优托管中心工作台</title>   
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"/>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+</head>
+<body>
+
+    <div id="loginOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-color); z-index: 2000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s ease;">
+        <div class="login-decor" aria-hidden="true">
+            <i class="fas fa-book decor-icon book"></i>
+            <i class="fas fa-pencil-alt decor-icon pencil"></i>
+            <i class="fas fa-graduation-cap decor-icon cap"></i>
+        </div>
+        <div class="login-grid" aria-hidden="true"></div>
+        <div id="loginBox" style="background-color: var(--panel-bg-color); padding: 2.5rem; border-radius: 12px; box-shadow: var(--shadow-lg); text-align: center; width: 350px;">
+            <i class="fas fa-user-graduate" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+            <h3 style="margin-bottom: 1.5rem; color: var(--font-color);">培优托管中心工作台</h3>
+            <input type="email" id="loginEmail" class="form-control mb-3" placeholder="请输入登录邮箱">
+            <input type="password" id="loginPassword" class="form-control mb-3" placeholder="请输入访问密码">
+            <button id="loginBtn" class="btn btn-primary w-100">登 录</button>
+            <p id="loginError" class="text-danger small mt-2 d-none">密码错误</p>
+        </div>
+    </div>
+
+
+    <header class="platform-header" style="visibility: hidden;">
+    <div class="header-main-content">
+        <div class="user-identity-container">
+            <div class="header-title-group">
+                <i class="fas fa-user-graduate"></i> <div class="header-title-wrapper">
+                    <h1>培优托管中心工作台</h1>
+                    <div id="currentUserDisplay" class="current-user-text">
+                        未登录
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="datetime-display" style="margin-left: 2rem;"></div>
+    </div>
+    <nav class="nav-icons">
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#studentManagementModal">
+            <i class="fas fa-users"></i>
+            <span>学生管理</span>
+        </button>
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#subjectManagementModal">
+            <i class="fas fa-book"></i>
+            <span>科目管理</span>
+        </button>
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#progressModal">
+            <i class="fas fa-tasks"></i>
+            <span>进度总览</span>
+        </button>
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#largeScreenModal">
+            <i class="fas fa-desktop"></i>
+            <span>大屏显示</span>
+        </button>
+
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#contractManagementModal">
+            <i class="fas fa-file-contract"></i>
+            <span>合约管理</span>
+        </button>
+
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#dashboardModal">
+            <i class="fas fa-chart-pie"></i>
+            <span>看板总览</span>
+        </button>
+
+        <button class="nav-icon" data-bs-toggle="modal" data-bs-target="#resetSystemModal">
+            <i class="fas fa-power-off"></i>
+            <span>系统重置</span>
+        </button>
+        
+        <button class="nav-icon" id="switchUserBtn">
+            <i class="fas fa-exchange-alt"></i>
+            <span>切换用户</span>
+        </button>
+    </nav>
+</header>
+    
+    <div class="page-container" style="visibility: hidden;">
+        <main class="main-container">
+            <section class="content-panel content-panel-left">
+                <h2 class="panel-header">作业登记</h2>
+                <div class="panel-body" id="homeworkRegistrationPanel">
+  <!-- Step 1: 选择学生（固定在顶部，不参与滚动） -->
+  <div class="mb-3">
+    <label for="selectStudent" class="form-label">1. 选择学生</label>
+    <input class="form-control" list="studentDatalistOptions" id="selectStudent" placeholder="输入或选择学生...">
+    <datalist id="studentDatalistOptions"></datalist>
+    <div id="studentSelectionWarning" class="form-text text-danger d-none">
+      无此学生，请先在右上角【学生管理】进行登记
+    </div>
+  </div>
+
+  <!-- Step 2: 选择科目（固定在顶部，不参与滚动） -->
+  <div id="subjectSelectionSection" class="mb-2 d-none">
+    <label class="form-label">2. 选择科目 (可多选)</label>
+    <div id="subjectIconsContainer" class="d-flex flex-wrap gap-2"></div>
+  </div>
+
+  <!-- 从 Step 3 开始的滚动区域 -->
+  <div id="registrationScrollContainer">
+    <!-- Step 3: 输入作业任务（滚动容器内） -->
+    <div id="taskInputSection" class="mb-3 d-none">
+      <label class="form-label">3. 输入作业任务</label>
+      <div id="multiSubjectTaskContainer"></div>
+    </div>
+
+    <!-- 同时登记给同年级其他同学（滚动容器内） -->
+    <div id="classmatesSelectionContainer" class="classmate-tags-container d-none mt-1">
+      <label class="form-label mb-0 small">同时登记给同年级其他同学 (可多选):</label>
+      <div id="classmateTags" class="classmate-tags"></div>
+    </div>
+
+    <!-- 登记按钮（滚动容器内，保持靠底） -->
+    <button id="registerHomeworkBtn" class="btn btn-primary w-100 mt-auto" disabled>登记作业</button>
+  </div>
+</div>
+            </section>
+
+            <section class="content-panel content-panel-right">
+                <div class="d-flex justify-content-between align-items-center right-panel-header">
+                    <h2>家庭作业清单</h2>
+<div class="d-flex align-items-center gap-2">
+    <!-- 改为支持开始/结束日期范围筛选 -->
+    <input type="date" id="filterHomeworkStartDate" class="form-control form-control-sm"  title="开始日期" style="width: 140px;">
+    <input type="date" id="filterHomeworkEndDate" class="form-control form-control-sm"  title="结束日期" style="width: 140px;">
+    
+    <div class="dropdown" id="nameFilterDropdown">
+  <button class="btn btn-datepicker-style dropdown-toggle btn-sm" type="button" id="filterStudentNameBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" style="width: 140px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+    按姓名筛选
+  </button>
+  <div class="dropdown-menu" id="filterStudentNameContainer" aria-labelledby="filterStudentNameBtn">
+    </div>
+</div>
+
+<div class="dropdown" id="statusFilterDropdown">
+  <button class="btn btn-datepicker-style dropdown-toggle btn-sm" type="button" id="filterCompletionStatusBtn" data-bs-toggle="dropdown" data-bs-auto-close="outside" style="width: 140px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+    按状态筛选
+  </button>
+  <div class="dropdown-menu" id="filterCompletionStatusContainer" aria-labelledby="filterCompletionStatusBtn" >
+    <div class="dropdown-item-text px-3">
+      <input type="checkbox" id="filter-status-uncompleted" class="form-check-input" name="filterCompletionStatus" value="未完成">
+      <label for="filter-status-uncompleted" class="form-check-label ms-2">未完成</label>
+    </div>
+    <div class="dropdown-item-text px-3">
+      <input type="checkbox" id="filter-status-partial" class="form-check-input" name="filterCompletionStatus" value="部分完成">
+      <label for="filter-status-partial" class="form-check-label ms-2">部分完成</label>
+    </div>
+    <div class="dropdown-item-text px-3">
+      <input type="checkbox" id="filter-status-completed" class="form-check-input" name="filterCompletionStatus" value="已完成">
+      <label for="filter-status-completed" class="form-check-label ms-2">已完成</label>
+    </div>
+  </div>
+</div>
+
+<button class="btn btn-sm btn-outline-success" id="exportHomeworkBtn" title="导出Excel"><i class="fas fa-file-excel"></i></button>
+<button class="btn btn-sm btn-outline-danger" id="deleteAllHomeworkBtn" title="删除当前日期全部作业"><i class="fas fa-trash-alt"></i></button>
+</div>
+                </div>
+                <div class="panel-body" id="todaysHomeworkList"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <div id="networkStatus" class="network-status offline" style="display: none;">
+        <i class="fas fa-wifi"></i>
+        <span id="networkStatusText">离线中</span>
+    </div>
+    
+    <div class="modal fade main-modal" id="studentManagementModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">学生管理</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    <div class="row h-100">
+                        <div class="col-md-4 border-end">
+                            <h5>新学生登记</h5>
+                            <form id="addStudentForm" class="mt-3">
+                                <div class="mb-3"><label for="studentName" class="form-label">学生姓名*</label><input type="text" class="form-control" id="studentName" required></div>
+                                <div class="mb-3">
+                                    <label class="form-label">年级*</label>
+                                    <div id="studentGradeTags" class="grade-tags"></div>
+                                </div>
+                                <div class="mb-3"><label for="studentRemarks" class="form-label">备注</label><textarea class="form-control" id="studentRemarks" rows="3"></textarea></div>
+                                <button type="submit" class="btn btn-primary w-100">添加学生</button>
+                            </form>
+                        </div>
+                        <div class="col-md-8 d-flex flex-column student-panel">
+  <!-- 筛选区域 -->
+  <div class="student-filter-bar">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5>学生列表</h5>
+      <div class="d-flex align-items-center gap-2">
+        <input type="text" id="filterStudentByName" class="form-control form-control-sm" placeholder="按姓名筛选...">
+        <select id="filterStudentByGrade" class="form-select form-select-sm">
+          <option value="">按年级筛选</option>
+        </select>
+        <div class="ms-auto d-flex align-items-center gap-2 border-start ps-2">
+          <input type="file" id="importStudentFile" class="d-none" accept=".xlsx, .xls">
+          <button class="btn btn-sm btn-outline-primary" id="importStudentBtn" title="导入Excel"><i class="fas fa-file-import"></i></button>
+          <button class="btn btn-sm btn-outline-success" id="exportStudentBtn" title="导出Excel"><i class="fas fa-file-export"></i></button>
+          <button class="btn btn-sm btn-outline-danger" id="clearAllStudentsBtn" title="清空所有学生"><i class="fas fa-trash-alt"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表格区域（含固定表头） -->
+  <div class="student-table-wrapper flex-grow-1">
+    <table class="table table-hover table-striped mb-0">
+      <thead class="sticky-top bg-white">
+        <tr>
+          <th style="width: 15%;">序号</th>
+          <th style="width: 20%;">姓名</th>
+          <th style="width: 15%;">年级</th>
+          <th>备注</th>
+          <th style="width: 15%;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="studentTableBody" style="overflow-y: auto;"></tbody>
+    </table>
+  </div>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade main-modal" id="subjectManagementModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">科目管理</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body">
+                    <div class="row h-100">
+                        <div class="col-md-4 border-end">
+                            <h5>科目登记</h5>
+                            <form id="addSubjectForm" class="mt-3">
+                                <div class="mb-3"><label for="subjectName" class="form-label">科目名称*</label><input type="text" class="form-control" id="subjectName" required></div>
+                                <div class="mb-3"><label class="form-label">所属年级*</label><div class="checkbox-tags" id="subjectGrades"></div><div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="selectAllGrades"><label class="form-check-label" for="selectAllGrades">全选</label></div></div>
+                                <button type="submit" class="btn btn-primary w-100">添加科目</button>
+                            </form>
+                        </div>
+                        <div class="col-md-8 d-flex flex-column">
+                             <h5>科目列表</h5>
+                             <div class="table-responsive flex-grow-1 mt-3" style="min-height: 0; max-height: 100%; overflow-y: auto;">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" style="width: 15%;">序号</th>
+                                            <th scope="col" style="width: 25%;">科目名称</th>
+                                            <th scope="col">所属年级</th>
+                                            <th scope="col" style="width: 15%;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="subjectTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade main-modal" id="progressModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">家庭作业进度总览</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body d-flex flex-column">
+                    <div class="mb-3 flex-shrink-0"><label class="form-label fw-bold">按年级筛选：</label><div id="progressGradeFilter" class="checkbox-tags d-inline-flex"></div><div class="form-check form-check-inline ms-3"><input class="form-check-input" type="checkbox" id="progressSelectAllGrades"><label class="form-check-label" for="progressSelectAllGrades">全选</label></div></div>
+                    <div class="table-responsive flex-grow-1"><table class="table table-bordered text-center"><thead id="progressTableHead"></thead><tbody id="progressTableBody"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade main-modal" id="largeScreenModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content h-100">
+                <div class="modal-header">
+                    <h5 class="modal-title me-auto">作业进度大屏显示</h5>
+                    <button id="fullscreenBtn" class="btn btn-sm btn-outline-light me-2" title="全屏显示"><i class="fas fa-expand"></i></button>
+                    <button id="darkModeToggleBtn" class="btn btn-sm btn-outline-light me-2" title="切换深色模式"><i class="fas fa-moon"></i></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="largeScreenModalBody">
+                    <div class="large-screen-container">
+                        <div class="grade-region"><div class="grade-region-header">小学</div><div class="grade-region-body" id="largeScreenPrimary"></div></div>
+                        <div class="grade-region"><div class="grade-region-header">七年级</div><div class="grade-region-body" id="largeScreenGrade7"></div></div>
+                        <div class="grade-region"><div class="grade-region-header">八九年级</div><div class="grade-region-body" id="largeScreenGrade89"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade sub-modal" id="bulkInputModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">整段输入并自动分行</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- 固定在顶部：目标科目 -->
+      <div class="px-3 pt-3">
+        <div class="mb-3">
+          <label class="form-label">目标科目</label>
+          <input type="text" class="form-control" id="bulkInputSubjectName" disabled>
+        </div>
+      </div>
+
+      <!-- 仅该区域滚动 -->
+      <div class="modal-body bulk-scroll-body">
+  <div class="bulk-two-col">
+    <!-- 左侧：粘贴输入 -->
+    <div class="bulk-pane">
+      <div class="mb-2">
+        <label class="form-label">作业文本</label>
+        <textarea class="form-control" id="bulkInputTextarea" placeholder="将一整段作业粘贴到此处进行编辑，每一行将自动识别为一条独立作业任务"></textarea>
+        
+      </div>
+    </div>
+
+    <!-- 右侧：分行预览 -->
+    <div class="bulk-pane">
+      <div class="mb-2">
+        <label class="form-label">预览</label>
+        <div id="bulkInputPreview" class="border rounded p-2"> </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+      <!-- 固定在底部：功能按钮 -->
+      <div class="modal-footer">
+  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+  <button type="button" id="bulkInputConfirmBtn" class="btn btn-primary">提交并填入</button>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<div class="modal fade sub-modal" id="ocrInputModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">图片识别并自动分行</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- 顶部：目标科目 -->
+      <div class="px-3 pt-3">
+        <div class="mb-3">
+          <label class="form-label">目标科目</label>
+          <input type="text" class="form-control" id="ocrInputSubjectName" disabled>
+        </div>
+      </div>
+
+      <!-- 仅主体滚动 -->
+      <div class="modal-body ocr-scroll-body">
+        <div class="ocr-two-col">
+          <!-- 左侧：粘贴/拖拽图片 + 可编辑识别文本 -->
+          <div class="ocr-pane">
+            <div class="mb-2 d-flex justify-content-start align-items-center">
+  <label class="form-label mb-0">粘贴或拖拽图片</label>
+  <div id="ocrProgressFlag" class="ocr-progress-pill d-none ms-3">
+    <span class="spinner"></span>
+    <span id="ocrProgressText">识别中…</span>
+  </div>
+</div>
+
+            <div id="ocrDropzone" class="ocr-input-dropzone">
+              <div class="text-muted small">在此处粘贴图片或拖拽图片文件（JPG/PNG），检测到有效图片后将自动开始识别。</div>
+              <img id="ocrImagePreview" class="ocr-image-preview d-none" alt="预览图">
+            </div>
+
+            <textarea id="ocrResultTextarea" class="form-control ocr-textarea" placeholder="识别出的文本将在此显示，您可以进行编辑。"></textarea>
+            
+          </div>
+
+          <!-- 右侧：分行预览 -->
+          <div class="ocr-pane">
+            <div class="mb-2">
+              <label class="form-label">识别预览</label>
+              <div id="ocrResultPreview" class="ocr-preview-box"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底部：按钮 -->
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+        <button type="button" id="ocrInputConfirmBtn" class="btn btn-primary">提交并填入</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="modal fade main-modal" id="contractManagementModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">合约管理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row h-100">
+                        <div class="col-md-4 border-end">
+                            <h5>合约登记</h5>
+                            <form id="addContractForm" class="mt-3">
+                                <div class="mb-3">
+                                    <label for="contractStudentSelect" class="form-label">1. 选择学生*</label>
+                                    <select class="form-select" id="contractStudentSelect" required>
+                                        <option value="">请单击选择学生...</option>
+                                    </select>
+                                </div>
+                                <!-- 新：服务类型图标单选 -->
+<div class="mb-3">
+  <label class="form-label">2. 服务类型*</label>
+  <div id="contractServiceTypeIcons" class="d-flex flex-wrap gap-2">
+    <div class="service-type-icon" data-service-type="午托" title="午托">
+      <i class="fas fa-sun"></i><span>午托</span>
+    </div>
+    <div class="service-type-icon" data-service-type="晚托" title="晚托">
+      <i class="fas fa-moon"></i><span>晚托</span>
+    </div>
+    <div class="service-type-icon" data-service-type="全托" title="全托">
+      <i class="fas fa-calendar-day"></i><span>全托</span>
+    </div>
+    <div class="service-type-icon" data-service-type="临时托管" title="临时托管">
+      <i class="fas fa-hourglass-half"></i><span>临时托管</span>
+    </div>
+  </div>
+  <div id="contractServiceTypeError" class="text-danger small d-none">请选择服务类型</div>
+</div>
+
+                                <div class="mb-3">
+                                    <label for="contractStartDate" class="form-label">3. 合约开始日期*</label>
+                                    <input type="date" class="form-control" id="contractStartDate" required>
+                                </div>
+
+                                <!-- 新增：工作日数（默认22） -->
+<div class="mb-3">
+  <label for="contractWorkingDays" class="form-label">4.工作日天数（默认22个工作日）</label>
+  <input type="number" class="form-control" id="contractWorkingDays" min="1" max="999" step="1" placeholder="22">
+  <div class="form-text">可根据实际情况进行修改。</div>
+</div>
+                                <div class="mb-3">
+                                    <label for="contractEndDate" class="form-label">5. 合约结束日期*</label>
+                                    <div class="input-group">
+                                        <input type="date" class="form-control" id="contractEndDate" required>
+                                        <button class="btn btn-outline-secondary" type="button" id="openHolidayModalBtn" title="设置节假日与调休">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">法定假日及调休信息请在右侧日历中进行维护。</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100" id="addContractBtn">登记合约</button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-8 d-flex flex-column student-panel">
+                            <div class="student-filter-bar">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h5>合约列表</h5>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select id="filterContractByName" class="form-select form-select-sm" style="width: 180px;">
+                                            <option value="">按姓名筛选</option>
+                                        </select>
+                                        <select id="filterContractByStatus" class="form-select form-select-sm" style="width: 150px;">
+                                            <option value="">按状态筛选</option>
+                                            <option value="生效中">生效中</option>
+                                            <option value="即将过期">即将过期</option>
+                                            <option value="已过期">已过期</option>
+                                            <option value="已续约">已续约</option>
+                                            <option value="已终止">已终止</option>
+                                        </select>
+                                        <div class="ms-auto d-flex align-items-center gap-2 border-start ps-2">
+                                            <button class="btn btn-sm btn-outline-success" id="exportContractBtn" title="导出Excel">
+                                                <i class="fas fa-file-export"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="student-table-wrapper flex-grow-1">
+                                <table class="table table-hover table-striped mb-0">
+                                    <thead class="sticky-top bg-white">
+                                        <tr>
+                                            <th>序号</th>
+                                            <th>姓名</th>
+                                            <th>年级</th>
+                                            <th>服务</th>
+                                            <th>开始日期</th>
+                                            <th>工作日天数</th> <!-- ✅ 新增 -->
+                                            <th>结束日期</th>
+                                            <th>有效期</th>
+                                            <th>状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="contractTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade sub-modal" id="holidayManagementModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">节假日与调休管理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">请在此处输入假日办公布的法定节假日（放假日期）和调休工作日（上班日期）。日期格式：YYYY-MM-DD，多个日期请换行隔开，每行显示一条日期。</p>
+                    <div class="mb-3">
+                        <label for="holidayDates" class="form-label">法定节假日</label>
+                        <textarea class="form-control" id="holidayDates" rows="5" placeholder="例如: 2025-01-01,2025-01-29,2025-01-30,..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="workdayDates" class="form-label">调休工作日 (上班)</label>
+                        <textarea class="form-control" id="workdayDates" rows="5" placeholder="例如: 2025-01-26,2025-02-08,..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveHolidayConfigBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="expiringOverlayModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">合约到期提醒</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="expiringOverlayBody">
+        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">我已知晓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 合约日期重叠检测 -->
+<div class="modal fade" id="contractOverlapModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-danger">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>合约日期重叠警告</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning small">
+            检测到以下学生的历史合约存在日期重叠（冲突）。<br>
+            这可能会导致计费统计错误，建议您核实并修正相关合约的起止日期。
+        </div>
+        <div id="contractOverlapBody"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">我已知晓，继续查看提醒</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 看板总览（主模态） -->
+<div class="modal fade main-modal" id="dashboardModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content h-100">
+      <div class="modal-header">
+        <h5 class="modal-title">数据看板总览</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-3" id="dashboardModalBody">
+        <!-- 统计卡片区：4列栅格 -->
+        <div class="container-fluid">
+          <!-- 顶部指标行 -->
+          <div class="row g-3 mb-2">
+            <div class="col-md-3">
+              <div class="dash-card">
+                <div class="dash-card-header">
+                  <i class="fas fa-user-friends"></i><span>学生总数</span>
+                </div>
+                <div class="dash-card-body">
+                  <div class="dash-kpi" id="dashTotalStudents">0</div>
+                  <div class="dash-sub">男女比例：未登记</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="dash-card">
+                <div class="dash-card-header">
+                  <i class="fas fa-layer-group"></i><span>年级分布</span>
+                </div>
+                <div class="dash-card-body">
+                  <div id="dashGradeDistribution" class="dash-list"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="dash-card">
+                <div class="dash-card-header">
+                  <i class="fas fa-hands-helping"></i><span>服务类型分布</span>
+                </div>
+                <div class="dash-card-body">
+                  <div id="dashServiceDistribution" class="dash-list"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="dash-card">
+                <div class="dash-card-header">
+                  <i class="fas fa-chart-line"></i><span>晚托/全托年级分布</span>
+                </div>
+                <div class="dash-card-body">
+                  <div class="small text-muted">按学生年级聚合比例</div>
+                  <div id="dashLateFullDistribution" class="dash-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 合约到期提醒区：左右两列 -->
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <div class="dash-card">
+                <div class="dash-card-header danger">
+                  <i class="fas fa-exclamation-circle"></i><span>已过期（未续约/未终止）</span>
+                </div>
+                <div class="dash-card-body">
+                  <div id="dashExpiredList" class="dash-table-wrapper">
+                    <table class="table table-sm table-hover mb-0">
+                      <thead  class="dash-expired-thead">
+                        <tr>
+                          <th>姓名</th>
+                          <th>年级</th>
+                          <th>服务类型</th>
+                          <th>开始日期</th>
+                          <th>结束日期</th>
+                          <th>剩余天数</th> <!-- 新增列 -->
+                        </tr>
+                      </thead>
+                      <tbody id="dashExpiredTbody">
+                        <tr><td colspan="5" class="text-muted text-center">暂无数据</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <div class="dash-card">
+                <div class="dash-card-header warning">
+                  <i class="fas fa-hourglass-half"></i><span>7天内即将到期</span>
+                </div>
+                <div class="dash-card-body">
+                  <div id="dashExpiringList" class="dash-table-wrapper">
+                    <table class="table table-sm table-hover mb-0">
+                      <thead class="dash-expiring-thead">
+                        <tr>
+                          <th>姓名</th>
+                          <th>年级</th>
+                          <th>服务类型</th>
+                          <th>开始日期</th>
+                          <th>结束日期</th>
+                          <th>剩余天数</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dashExpiringTbody">
+                        <tr><td colspan="6" class="text-muted text-center">暂无数据</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        <button class="btn btn-primary" id="dashboardRefreshBtn">刷新</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <div class="modal fade" id="resetSystemModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">系统重置</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> 警告：该操作将删除所有系统数据（本地数据与云端数据）并恢复至初始状态，且无法撤销，请谨慎操作！</div><div class="mb-3"><label for="resetPassword" class="form-label">请输入密码进行确认:</label><input type="password" class="form-control" id="resetPassword"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-danger" id="confirmResetBtn">确认重置</button></div></div></div></div>
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="confirmationModalTitle">请确认</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body" id="confirmationModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-danger" id="confirmActionBtn">确认</button></div></div></div></div>
+    <div class="modal fade sub-modal" id="editModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="editModalTitle">编辑信息</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body" id="editModalBody"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="saveEditBtn">保存更改</button></div></div></div></div>
+    <div class="modal fade" id="passwordPromptModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false"><div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="passwordPromptTitle">需要密码</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body"><p id="passwordPromptMessage"></p><input type="password" id="passwordPromptInput" class="form-control"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button><button type="button" class="btn btn-primary" id="passwordPromptConfirmBtn">确认</button></div></div></div></div>
+    <div id="screenLockOverlay" class="screen-lock-overlay d-none">
+    <div class="d-flex flex-column align-items-center">
+        <div class="spinner-border text-light" style="width: 3rem; height: 3rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h4 class="mt-3 text-light fw-bold" id="screenLockMessage">正在处理...</h4>
+    </div>
+</div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.7.2/dist/dom-to-image-more.min.js"></script>
+
+    <script src="js/main.js" defer></script>
+  
+</body>
+</html>
