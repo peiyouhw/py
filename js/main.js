@@ -4811,28 +4811,54 @@ showExpiringOverlay(expiredContracts, expiringSoonContracts) {
 
           
             // =================================================================================
-// PROGRESS MODULE (仅显示三年级到九年级的学生作业完成进度)
+// PROGRESS MODULE (MODIFIED)
 // =================================================================================
 const ProgressModule = {
     head: document.getElementById('progressTableHead'),
     body: document.getElementById('progressTableBody'),
     filterContainer: document.getElementById('progressGradeFilter'),
     selectAllCheckbox: document.getElementById('progressSelectAllGrades'),
+
+    // 详情弹窗相关元素
+    overlay: document.getElementById('progressDetailOverlay'),
+    detailCard: document.getElementById('progressDetailCard'),
+    detailTitle: document.getElementById('progressDetailTitle'),
+    detailBody: document.getElementById('progressDetailBody'),
+    closeDetailBtn: document.getElementById('closeProgressDetailBtn'),
     
-    // === 核心定义：允许显示的有效年级白名单 ===
-    // 把它提取出来，供 filter 标签生成和表格渲染共用
+    // 有效年级白名单
     validGrades: ['三年级','四年级','五年级','六年级','七年级','八年级','九年级'],
+
+    // 固定科目顺序表 (复用)
+    SUBJECT_ORDER: [
+        '语文','数学','英语','物理','化学',
+        '道法','历史','生物','地理','科学','其他'
+    ],
 
     init() {
         this.renderGradeFilters();
         this.filterContainer.addEventListener('change', () => this.render());
         this.selectAllCheckbox.addEventListener('change', this.handleSelectAll.bind(this));
+
+        // 1. 表格点击事件委托
+        this.body.addEventListener('click', this.handleTableClick.bind(this));
+
+        // 2. 弹窗关闭事件 (点击关闭按钮 或 点击遮罩背景)
+        if (this.closeDetailBtn) {
+            this.closeDetailBtn.addEventListener('click', this.hideDetail.bind(this));
+        }
+        if (this.overlay) {
+            this.overlay.addEventListener('click', (e) => {
+                // 如果点击的是遮罩层本身（而不是内部的卡片），则关闭
+                if (e.target === this.overlay) {
+                    this.hideDetail();
+                }
+            });
+        }
     },
     
     renderGradeFilters() {
-        // === 修复点 1：顶部标签生成时，先过滤掉不需要的年级 ===
         const gradesToShow = App.grades.filter(g => this.validGrades.includes(g));
-
         this.filterContainer.innerHTML = gradesToShow.map(grade => 
             `<div class="checkbox-tag">
                 <input type="checkbox" id="progress-grade-${grade}" name="progressGradeFilter" value="${grade}" checked>
@@ -4847,44 +4873,217 @@ const ProgressModule = {
         this.render();
     },
 
+    // === 核心：点击处理路由 ===
+    handleTableClick(e) {
+        // 查找最近的 td
+        const td = e.target.closest('td');
+        if (!td) return;
+
+        // 获取行上的 student-id
+        const tr = td.parentElement;
+        const studentId = tr.dataset.studentId;
+        const studentName = tr.dataset.studentName; // 方便取名
+        if (!studentId) return;
+
+        // 情况1：点击姓名列 (具有 clickable-name 类)
+        if (td.classList.contains('clickable-name')) {
+            this.showStudentDetails(studentId, studentName);
+            return;
+        }
+
+        // 情况2：点击科目单元格 (具有 clickable-cell 类)
+        if (td.classList.contains('clickable-cell')) {
+            const subjectId = td.dataset.subjectId;
+            const subjectName = td.dataset.subjectName;
+            if (subjectId) {
+                this.showSubjectDetails(studentId, studentName, subjectId, subjectName);
+            }
+            return;
+        }
+    },
+
+    // === 功能1：显示学生详情（全科）===
+    showStudentDetails(studentId, studentName) {
+        // 获取日期范围
+        const start = (App.currentFilter && App.currentFilter.start) || getBeijingDateString();
+        const end = (App.currentFilter && App.currentFilter.end) || start;
+        
+        // 获取年级信息
+        const student = App.state.students.find(s => s.id === studentId);
+        const studentGrade = student ? student.grade : '';
+
+        // 筛选作业
+        const homeworks = App.state.homeworks.filter(h => 
+            !h.is_deleted && 
+            h.studentId === studentId && 
+            h.date >= start && 
+            h.date <= end
+        );
+
+        if (homeworks.length === 0) {
+            UIModule.showToast('该学生在此日期范围内无作业记录', 'info');
+            return;
+        }
+
+        // 准备数据结构：科目 -> 日期 -> 任务列表
+        const subjectMap = new Map(App.state.subjects.filter(s => !s.is_deleted).map(s => [s.id, s.name]));
+        
+        // 1. 按科目分组
+        const bySubject = homeworks.reduce((acc, hw) => {
+            const subjName = subjectMap.get(hw.subjectId) || '未知科目';
+            if (!acc[subjName]) acc[subjName] = [];
+            acc[subjName].push(hw);
+            return acc;
+        }, {});
+
+        // 2. 科目排序
+        const orderedSubjects = Object.entries(bySubject).sort(([aName], [bName]) => {
+            const idxA = this.SUBJECT_ORDER.indexOf(aName);
+            const idxB = this.SUBJECT_ORDER.indexOf(bName);
+            return (idxA === -1 ? this.SUBJECT_ORDER.length : idxA) -
+                   (idxB === -1 ? this.SUBJECT_ORDER.length : idxB);
+        });
+
+        // 3. 生成内容
+        let html = '';
+        orderedSubjects.forEach(([subjName, hws]) => {
+            html += `<div class="detail-group-title">${subjName}</div>`;
+            html += this.renderDetailContent(hws); // 复用渲染逻辑
+        });
+
+        // 4. 显示弹窗
+        this.detailTitle.textContent = `${studentName} (${studentGrade}) - 作业详情 (${start === end ? start : start + ' 至 ' + end})`;
+        this.detailBody.innerHTML = html;
+        this.showDetail();
+    },
+
+    // === 功能2：显示单科详情 ===
+    showSubjectDetails(studentId, studentName, subjectId, subjectName) {
+        // 获取日期范围
+        const start = (App.currentFilter && App.currentFilter.start) || getBeijingDateString();
+        const end = (App.currentFilter && App.currentFilter.end) || start;
+
+        // 1. 【新增】获取年级信息 (就在这里添加)
+        const student = App.state.students.find(s => s.id === studentId);
+        const studentGrade = student ? student.grade : '';
+
+        // 筛选作业
+        const homeworks = App.state.homeworks.filter(h => 
+            !h.is_deleted && 
+            h.studentId === studentId && 
+            h.subjectId === subjectId &&
+            h.date >= start && 
+            h.date <= end
+        );
+
+        // 即便是空作业也可以弹窗，显示“无作业”比没反应要好，
+        // 或者如果想没作业就不弹，可以在这里 return。
+        // 这里选择显示，提示更清晰。
+        
+        let html = '';
+        if (homeworks.length === 0) {
+            html = '<div class="text-muted text-center py-4">该科目在此日期范围内无作业</div>';
+        } else {
+            // 直接渲染内容 (无需科目分组，直接按日期)
+            html = this.renderDetailContent(homeworks);
+        }
+
+        this.detailTitle.textContent = `${studentName} (${studentGrade}) - ${subjectName}`;
+        this.detailBody.innerHTML = html;
+        this.showDetail();
+    },
+
+    // === 通用渲染：按日期分组并生成“左状态右任务”列表 ===
+    renderDetailContent(homeworks) {
+        // 1. 按日期分组
+        const byDate = homeworks.reduce((acc, hw) => {
+            if (!acc[hw.date]) acc[hw.date] = [];
+            acc[hw.date].push(hw);
+            return acc;
+        }, {});
+
+        // 2. 按日期升序排序
+        const orderedDates = Object.keys(byDate).sort((a, b) => a.localeCompare(b));
+
+        // 3. 生成 HTML
+        let html = '';
+        orderedDates.forEach(date => {
+            const tasks = byDate[date];
+            // 按 task_order 排序
+            tasks.sort((a, b) => (a.task_order || 0) - (b.task_order || 0));
+
+            html += `<div class="detail-date-label">${date}</div>`;
+            
+            tasks.forEach(hw => {
+                let statusClass = 'uncompleted';
+                let statusText = '未完成';
+                
+                if (hw.status === '已完成') { statusClass = 'completed'; statusText = '已完成'; }
+                else if (hw.status === '部分完成') { statusClass = 'partial'; statusText = '部分'; } // 缩短一点文字
+
+                html += `
+                <div class="detail-task-row">
+                    <span class="detail-status-pill ${statusClass}">${statusText}</span>
+                    <div class="detail-task-text">${hw.task}</div>
+                </div>
+                `;
+            });
+        });
+        return html;
+    },
+
+    // === 弹窗控制 ===
+    showDetail() {
+        if (this.overlay) {
+            this.overlay.classList.remove('d-none');
+            // 延时添加 show 类以触发 CSS transition
+            requestAnimationFrame(() => {
+                this.overlay.classList.add('show');
+            });
+            // 禁止背景滚动
+            document.body.style.overflow = 'hidden';
+        }
+    },
+
+    hideDetail() {
+        if (this.overlay) {
+            this.overlay.classList.remove('show');
+            // 等待动画结束后隐藏
+            setTimeout(() => {
+                this.overlay.classList.add('d-none');
+                this.detailBody.innerHTML = ''; // 清空内容
+                document.body.style.overflow = ''; // 恢复背景滚动
+            }, 200);
+        }
+    },
+
+    // === 主表格渲染 (Main Render) ===
     render() {
-        // === 1. 准备科目并排序 ===
+        // 1. 准备科目并排序
         const allSubjects = App.state.subjects.filter(s => !s.is_deleted);
         
-        const SUBJECT_ORDER = [
-            '语文','数学','英语','物理','化学',
-            '道法','历史','生物','地理','科学','其他'
-        ];
-
         allSubjects.sort((a, b) => {
-            const idxA = SUBJECT_ORDER.indexOf(a.name);
-            const idxB = SUBJECT_ORDER.indexOf(b.name);
-            return (idxA === -1 ? SUBJECT_ORDER.length : idxA) -
-                   (idxB === -1 ? SUBJECT_ORDER.length : idxB);
+            const idxA = this.SUBJECT_ORDER.indexOf(a.name);
+            const idxB = this.SUBJECT_ORDER.indexOf(b.name);
+            return (idxA === -1 ? this.SUBJECT_ORDER.length : idxA) -
+                   (idxB === -1 ? this.SUBJECT_ORDER.length : idxB);
         });
 
         // 渲染表头
         this.head.innerHTML = `<tr><th>序号</th><th>姓名</th><th>年级</th>${allSubjects.map(s => `<th>${s.name}</th>`).join('')}</tr>`;
 
-        // === 2. 获取过滤条件 ===
-        // 2.1 获取 UI 上选中的年级
+        // 2. 获取过滤条件
         const selectedGrades = Array.from(this.filterContainer.querySelectorAll('input:checked')).map(cb => cb.value);
-        
-        // 更新全选框状态 (根据当前显示的有效年级数量判断)
-        // 注意：这里比较的是当前 validGrades 的长度，而不是 App.grades 的长度
         this.selectAllCheckbox.checked = selectedGrades.length === this.validGrades.length;
 
-        // 2.2 获取日期范围
         const start = (App.currentFilter && App.currentFilter.start) || getBeijingDateString();
         const end = (App.currentFilter && App.currentFilter.end) || start;
 
-        // === 3. 获取作业数据 (用于筛选“有作业”的学生) ===
+        // 3. 获取作业数据
         const todaysHomeworks = App.state.homeworks.filter(h => !h.is_deleted && h.date >= start && h.date <= end);
-        
-        // 提取有作业的学生ID集合
         const activeStudentIds = new Set(todaysHomeworks.map(h => h.studentId));
 
-        // 构建作业映射 Map
+        // 构建作业映射 Map (Key: studentId-subjectId)
         const homeworkMap = new Map();
         todaysHomeworks.forEach(h => {
             const key = `${h.studentId}-${h.subjectId}`;
@@ -4892,25 +5091,14 @@ const ProgressModule = {
             homeworkMap.get(key).push(h);
         });
 
-        // === 4. 筛选并排序学生 ===
+        // 4. 筛选并排序学生
         const gradeOrder = App.grades;
-        
         const studentsToDisplay = App.state.students
             .filter(s => {
-                // 基础：未软删除
                 if (s.is_deleted) return false;
-                
-                // === 修复点 2：双重年级过滤 ===
-                
-                // A. 必须属于我们定义的白名单 (3-9年级)
                 if (!this.validGrades.includes(s.grade)) return false;
-
-                // B. 必须在 UI 上被勾选 (例如用户只想看三年级)
                 if (!selectedGrades.includes(s.grade)) return false;
-
-                // === 修复点 3：必须有有效作业 ===
                 if (!activeStudentIds.has(s.id)) return false;
-
                 return true;
             })
             .sort((a, b) => {
@@ -4919,18 +5107,30 @@ const ProgressModule = {
                 return a.name.localeCompare(b.name, 'zh-Hans-CN');
             });
 
-        // === 5. 生成 HTML ===
+        // 5. 生成 HTML
         if (studentsToDisplay.length === 0) {
             this.body.innerHTML = `<tr><td colspan="${3 + allSubjects.length}" class="text-center">没有符合条件的学生（仅显示3-9年级且有作业记录的学生）</td></tr>`;
             return;
         }
 
         this.body.innerHTML = studentsToDisplay.map((student, index) => {
-            let rowHTML = `<tr><td>${index + 1}</td><td>${student.name}</td><td>${student.grade}</td>`;
+            // === 改造点：在 TR 上存储 Student ID 和 Name ===
+            let rowHTML = `<tr data-student-id="${student.id}" data-student-name="${student.name}">
+                <td>${index + 1}</td>
+                <td class="clickable-name" title="点击查看${student.name}的所有作业详情">${student.name}</td>
+                <td>${student.grade}</td>`;
             
             allSubjects.forEach(subject => {
+                // === 修复逻辑：检查科目是否匹配年级 ===
+                // 如果该科目不适用于当前学生的年级，显示灰色空单元格，且不可点击
+                if (!subject.grades || !subject.grades.includes(student.grade)) {
+                    rowHTML += `<td class="bg-light" style="cursor: default;"></td>`;
+                    return; 
+                }
+
                 const key = `${student.id}-${subject.id}`;
                 const studentHomeworksForSubject = homeworkMap.get(key) || [];
+                
                 let status = "无", statusClass = "status-none", statusTextClass = "status-none-text";
                 
                 if (studentHomeworksForSubject.length > 0) {
@@ -4947,7 +5147,14 @@ const ProgressModule = {
                         status = "未完成"; statusClass = "status-uncompleted"; statusTextClass = "status-uncompleted-text"; 
                     }
                 }
-                rowHTML += `<td class="${statusClass}"><span class="${statusTextClass}">${status}</span></td>`;
+                
+                // === 改造点：单元格增加 clickable-cell 类和 Subject 元数据 ===
+                rowHTML += `<td class="${statusClass} clickable-cell" 
+                                data-subject-id="${subject.id}" 
+                                data-subject-name="${subject.name}"
+                                title="点击查看${subject.name}作业详情">
+                                <span class="${statusTextClass}">${status}</span>
+                            </td>`;
             });
             return rowHTML + '</tr>';
         }).join('');
