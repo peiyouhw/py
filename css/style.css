@@ -1787,3 +1787,138 @@
 body.screen-locked {
     overflow: hidden !important;
 }
+
+/* 20251213 === 进度详情弹窗 (Progress Detail Popover) === */
+.progress-detail-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* 半透明黑色背景 */
+    z-index: 2050; /* 比 Bootstrap Modal (1055) 高 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.progress-detail-overlay.show {
+    opacity: 1;
+}
+
+.progress-detail-card {
+    background-color: var(--panel-bg-color);
+    width: 90%;
+    max-width: 600px; /* 限制最大宽度 */
+    max-height: 80vh; /* 限制最大高度 */
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.progress-detail-overlay.show .progress-detail-card {
+    transform: scale(1);
+}
+
+.progress-detail-header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0; /* 防止头部被压缩 */
+}
+
+.progress-detail-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.progress-detail-body {
+    padding: 1rem;
+    overflow-y: auto; /* 内容过长自动滚动 */
+}
+
+/* 详情列表样式 */
+.detail-group-title {
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.25rem;
+    font-size: 0.95rem;
+}
+.detail-group-title:first-child { margin-top: 0; }
+
+.detail-date-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin: 0.5rem 0 0.25rem 0;
+    padding-left: 0.5rem;
+    border-left: 3px solid var(--border-color);
+}
+
+.detail-task-row {
+    display: flex;
+    align-items: flex-start; /* 顶部对齐 */
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #eee;
+    gap: 0.75rem;
+}
+
+.detail-task-row:last-child { border-bottom: none; }
+
+.detail-status-pill {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    width: 70px;
+    text-align: center;
+}
+
+/* 状态颜色复用现有变量 */
+.detail-status-pill.completed { background-color: var(--status-green-bg); color: #2e7d32; }
+.detail-status-pill.partial { background-color: var(--status-yellow-bg); color: #f57f17; }
+.detail-status-pill.uncompleted { background-color: var(--status-red-bg); color: #c62828; }
+
+.detail-task-text {
+    flex-grow: 1;
+    font-size: 0.9rem;
+    color: var(--font-color);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+/* 表格交互样式 */
+.clickable-cell {
+    cursor: pointer;
+}
+.clickable-cell:hover {
+    filter: brightness(0.95); /* 微微变暗提示可点击 */
+    box-shadow: inset 0 0 0 2px var(--primary-color); /* 内阴影高亮 */
+}
+.clickable-name {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(0, 103, 198, 0.3);
+}
+.clickable-name:hover {
+    color: var(--primary-color-hover);
+    text-decoration-color: var(--primary-color);
+}
